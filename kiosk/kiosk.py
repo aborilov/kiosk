@@ -3,7 +3,7 @@
 import logging
 import logging.handlers
 
-from twisted.internet import reactor, defer, task
+from twisted.internet import reactor, defer
 from twisted.internet.serialport import SerialPort
 
 from serial import PARITY_NONE
@@ -12,6 +12,8 @@ from serial import EIGHTBITS
 
 from pymdb.protocol.mdb import MDB
 from pymdb.device.changer import Changer, COINT_ROUTING
+
+from automat import MethodicalMachine
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -61,6 +63,28 @@ class Kiosk(object):
         logger.debug("Deposited: {}".format(amount))
         if self.waiter:
             self.waiter.callback(amount)
+
+
+class Kiosk2(object):
+
+    machine = MethodicalMachine()
+
+    def __init__(self, changer, bill, plc):
+        self.changer = changer
+        self.bill = bill
+        self.plc = plc
+
+    @machine.state(initial=True)
+    def initial(self):
+        pass
+
+    @machine.input()
+    def start(self):
+        pass
+
+    @machine.state()
+    def ready(self):
+        pass
 
 
 class RUChanger(Changer):
