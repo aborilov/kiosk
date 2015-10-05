@@ -3,6 +3,8 @@
 import logging
 import logging.handlers
 
+from transitions import Machine
+
 from twisted.internet import reactor, defer
 from twisted.internet.serialport import SerialPort
 
@@ -12,8 +14,6 @@ from serial import EIGHTBITS
 
 from pymdb.protocol.mdb import MDB
 from pymdb.device.changer import Changer, COINT_ROUTING
-
-from automat import MethodicalMachine
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -65,27 +65,38 @@ class Kiosk(object):
             self.waiter.callback(amount)
 
 
-class Kiosk2(object):
+class Kiosk2(Machine):
 
-    machine = MethodicalMachine()
-
-    def __init__(self, changer, bill, plc):
+    def __init__(self, changer):
+        states = ["ready", "summing", "prepare", "dispense"]
+        transitions = [
+            {'trigger': 'sell', 'source': 'ready',
+             'dest': 'summing', 'before': 'set_product'},
+            {'trigger': 'coin_in', 'source': 'summing',
+            'dest': 'prepare', 'conditions': 'is_enough'},
+            {'trigger': 'prepared', 'source': 'prepare', 'dest': 'dispense'},
+            {'trigger': 'coin_out', 'source': 'dispense',
+             'dest': 'ready', 'conditions': 'is_dispensed',
+             'after': 'clear_summ'},
+        ]
         self.changer = changer
-        self.bill = bill
-        self.plc = plc
+        super(Kiosk2, self).__init__(
+            states=states, transitions=transitions, initial='ready')
+        self.summ = 0
 
-    @machine.state(initial=True)
-    def initial(self):
-        pass
+    def set_product(self, product):
+        self.product = product
 
-    @machine.input()
-    def start(self):
-        pass
+    def is_enough(self, amount):
+        self.summ += amount
+        return self.summ >= self.product
 
-    @machine.state()
-    def ready(self):
-        pass
+    def is_dispensed(self, amount):
+        self.summ -= amount
+        return (self.summ - self.product)<=0
 
+    def clear_summ(self, amount):
+        self.summ = 0
 
 class RUChanger(Changer):
 
@@ -115,15 +126,17 @@ class RUChanger(Changer):
 
 
 if __name__ == '__main__':
-    proto = MDB()
-    SerialPort(
-        #  proto, '/dev/ttyUSB0', reactor,
-        proto, '/dev/ttyS0', reactor,
-        baudrate='38400', parity=PARITY_NONE,
-        bytesize=EIGHTBITS, stopbits=STOPBITS_ONE)
-    kiosk = Kiosk(proto)
-    reactor.callLater(0, kiosk.loop)
-    reactor.callLater(3, kiosk.accept, 15)
+    kiosk = Kiosk2(None)
+    import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+    #  proto = MDB()
+    #  SerialPort(
+        #  #  proto, '/dev/ttyUSB0', reactor,
+        #  proto, '/dev/ttyS0', reactor,
+        #  baudrate='38400', parity=PARITY_NONE,
+        #  bytesize=EIGHTBITS, stopbits=STOPBITS_ONE)
+    #  kiosk = Kiosk(proto)
+    #  reactor.callLater(0, kiosk.loop)
+    #  reactor.callLater(3, kiosk.accept, 15)
     #  reactor.callLater(15, kiosk.stop_changer)
-    logger.debug("run reactor")
-    reactor.run()
+    #  ckkklogger.debug("run reactor")
+    #  reactor.run()
