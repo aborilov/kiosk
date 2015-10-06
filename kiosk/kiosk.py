@@ -68,33 +68,44 @@ class Kiosk(object):
 class Kiosk2(Machine):
 
     def __init__(self, changer):
-        states = ["ready", "summing", "prepare", "dispense", "accept_bill"]
+        states = ["ready", "summing", "prepare", "dispense",
+                  "accept_bill", 'return_bill', 'accept_bill']
         transitions = [
-            # trigger,         source,          dest,      conditions,       unless,      before,        after
-            ['sell',           'ready',        'summing',      None,          None,       'set_product',  None],
-            ['coin_in',        'summing',      'prepare',     'is_enough',    None,        None,          None],
-            ['bill_in',        'summing',      'accept_bill', 'check_bill',   None,        None,          None],
-            ['bill_in',        'summing',      'return_bill',  None,         'check_bill', None,          None],
-            ['bill_returned',  'return_bill',  'summing',      None,         'check_bill', None,          None],
-            ['bill_stacked',   'accept_bill',  'summing',      None,         'check_bill', None,          None],
-            ['prepared',       'prepare',      'dispense',     None,          None,        None,          None],
-            ['coin_out',       'dispense',     'ready',       'is_dispensed', None,        None,         'clear_summ'],
+            # trigger,         source,          dest,      conditions,       unless,          before,          after
+            ['sell',           'ready',        'summing',      None,          None,         'set_product',     None       ],
+            ['coin_in',        'summing',      'prepare',     'is_enough',    None,         'add_amount',      None       ],
+            ['coin_in',        'summing',      'summing',      None,         'is_enough',   'add_amount',      None       ],
+            ['bill_in',        'summing',      'accept_bill', 'check_bill',   None,           None,            None       ],
+            ['bill_in',        'summing',      'return_bill',  None,         'check_bill',    None,            None       ],
+            ['bill_returned',  'return_bill',  'summing',      None,         'check_bill',    None,            None       ],
+            ['bill_stacked',   'accept_bill',  'prepare',     'is_enough',    None,          'add_amount',     None       ],
+            ['bill_stacked',   'accept_bill',  'summing',      None,         'is_enough',    'add_amount',     None       ],
+            ['prepared',       'prepare',      'dispense',     None,          None,           None,            None       ],
+            ['coin_out',       'dispense',     'dispense',     None,         'is_dispensed', 'remove_amount',  None       ],
+            ['coin_out',       'dispense',     'ready',       'is_dispensed', None,          'remove_amount', 'clear_summ'],
         ]
         self.changer = changer
         super(Kiosk2, self).__init__(
             states=states, transitions=transitions, initial='ready')
         self.summ = 0
 
+    def add_amount(self, amount):
+        self.summ += amount
+
     def set_product(self, product):
         self.product = product
 
+    def check_bill(self, bill):
+        return bill == 10
+
     def is_enough(self, amount):
-        self.summ += amount
-        return self.summ >= self.product
+        return self.summ + amount >= self.product
+
+    def remove_amount(self, amount):
+        self.summ -= amount
 
     def is_dispensed(self, amount):
-        self.summ -= amount
-        return (self.summ - self.product) <= 0
+        return (self.summ - amount - self.product) <= 0
 
     def clear_summ(self, amount):
         self.summ = 0
@@ -129,6 +140,7 @@ class RUChanger(Changer):
 
 if __name__ == '__main__':
     kiosk = Kiosk2(None)
+    import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     proto = MDB()
     SerialPort(
         #  proto, '/dev/ttyUSB0', reactor,
