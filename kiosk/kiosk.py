@@ -3,6 +3,11 @@
 import logging
 import logging.handlers
 
+from transitions import logger as tr_logger
+
+from louie import plugin
+from louie import dispatcher
+
 from transitions import Machine
 
 from twisted.internet import reactor, defer
@@ -15,7 +20,19 @@ from serial import EIGHTBITS
 from pymdb.protocol.mdb import MDB
 from pymdb.device.changer import Changer, COINT_ROUTING
 
-logger = logging.getLogger()
+plugin.install_plugin(plugin.TwistedDispatchPlugin())
+
+
+logger = logging.getLogger('pymdb')
+logger.setLevel(logging.DEBUG)
+handler = logging.handlers.RotatingFileHandler(
+    'pymdb.log', maxBytes=1028576, backupCount=10)
+form = logging.Formatter(
+    '%(asctime)s %(name)-12s %(levelname)s:%(message)s')
+handler.setFormatter(form)
+logger.addHandler(handler)
+
+logger = logging.getLogger('kiosk')
 logger.setLevel(logging.DEBUG)
 handler = logging.handlers.RotatingFileHandler(
     'kiosk.log', maxBytes=1028576, backupCount=10)
@@ -23,6 +40,9 @@ form = logging.Formatter(
     '%(asctime)s %(name)-12s %(levelname)s:%(message)s')
 handler.setFormatter(form)
 logger.addHandler(handler)
+
+tr_logger.addHandler(handler)
+tr_logger.setLevel(logging.DEBUG)
 
 
 class Kiosk(object):
@@ -72,34 +92,52 @@ class Kiosk2(Machine):
                   "accept_bill", 'return_bill', 'accept_bill']
         transitions = [
             # trigger,         source,          dest,      conditions,       unless,          before,          after
-            ['sell',           'ready',        'summing',      None,          None,         'set_product',     None       ],
-            ['coin_in',        'summing',      'prepare',     'is_enough',    None,         'add_amount',      None       ],
-            ['coin_in',        'summing',      'summing',      None,         'is_enough',   'add_amount',      None       ],
-            ['bill_in',        'summing',      'accept_bill', 'check_bill',   None,           None,            None       ],
-            ['bill_in',        'summing',      'return_bill',  None,         'check_bill',    None,            None       ],
-            ['bill_returned',  'return_bill',  'summing',      None,         'check_bill',    None,            None       ],
-            ['bill_stacked',   'accept_bill',  'prepare',     'is_enough',    None,          'add_amount',     None       ],
-            ['bill_stacked',   'accept_bill',  'summing',      None,         'is_enough',    'add_amount',     None       ],
-            ['prepared',       'prepare',      'dispense',     None,         'is_dispensed',  None,            None       ],
-            ['prepared',       'prepare',      'ready',       'is_dispensed', None,           None,           'clear_summ'],
-            ['coin_out',       'dispense',     'dispense',     None,         'is_dispensed', 'remove_amount',  None       ],
-            ['coin_out',       'dispense',     'ready',       'is_dispensed', None,          'remove_amount', 'clear_summ'],
+            ['sell',           'ready',        'summing',      None,          None,         'set_product',     None        ],
+            ['coin_in',        'summing',      'prepare',     'is_enough',    None,         'add_amount',     'stop_accept'],
+            ['coin_in',        'summing',      'summing',      None,         'is_enough',   'add_amount',      None        ],
+            ['bill_in',        'summing',      'accept_bill', 'check_bill',   None,           None,            None        ],
+            ['bill_in',        'summing',      'return_bill',  None,         'check_bill',    None,            None        ],
+            ['bill_returned',  'return_bill',  'summing',      None,         'check_bill',    None,            None        ],
+            ['bill_stacked',   'accept_bill',  'prepare',     'is_enough',    None,          'add_amount',     None        ],
+            ['bill_stacked',   'accept_bill',  'summing',      None,         'is_enough',    'add_amount',    'stop_accept'],
+            ['prepared',       'prepare',      'dispense',     None,         'is_dispensed',  None,            None        ],
+            ['prepared',       'prepare',      'ready',       'is_dispensed', None,           None,           'clear_summ' ],
+            ['coin_out',       'dispense',     'dispense',     None,         'is_dispensed', 'remove_amount',  None        ],
+            ['coin_out',       'dispense',     'ready',       'is_dispensed', None,          'remove_amount', 'clear_summ' ],
         ]
-        self.changer = changer
         super(Kiosk2, self).__init__(
             states=states, transitions=transitions, initial='ready')
+        self.changer = changer
+        dispatcher.connect(self.coin_in, sender=changer, signal='coin_in')
         self.summ = 0
 
+    @defer.inlineCallbacks
+    def start(self):
+        yield self.changer.reset()
+        self.changer.start_polling()
+
     def add_amount(self, amount):
+        logger.debug('add amount {}'.format(amount))
         self.summ += amount
+
+    def start_accept(self):
+        logger.debug('start accept')
+        self.changer.start_accept()
+
+    def stop_accept(self, amount):
+        logger.debug('stop accept')
+        self.changer.stop_accept()
 
     def set_product(self, product):
         self.product = product
+        self.start_accept()
 
     def check_bill(self, bill):
         return bill == 10
 
     def is_enough(self, amount):
+        logger.debug("check for enough, need {}, have {}".format(
+            self.product, self.summ+amount))
         return self.summ + amount >= self.product
 
     def remove_amount(self, amount):
@@ -121,9 +159,8 @@ class RUChanger(Changer):
         4: 10
     }
 
-    def __init__(self, proto, kiosk):
+    def __init__(self, proto):
         super(RUChanger, self).__init__(proto)
-        self.kiosk = kiosk
 
     def start_accept(self):
         return self.coin_type(coins='\xFF\xFF')
@@ -136,21 +173,25 @@ class RUChanger(Changer):
             "Coin deposited({}): {}".format(
                 COINT_ROUTING[routing], self.COINS[coin]))
         if routing == 1:
-            self.kiosk.deposited(self.COINS[coin])
+            amount = self.COINS[coin]
+            dispatcher.send_minimal(
+                sender=self, signal='coin_in', amount=amount)
 
 
 if __name__ == '__main__':
-    kiosk = Kiosk2(None)
-    import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     proto = MDB()
     SerialPort(
         #  proto, '/dev/ttyUSB0', reactor,
-        proto, '/dev/ttyS0', reactor,
+        proto, '/dev/ttyUSB0', reactor,
         baudrate='38400', parity=PARITY_NONE,
         bytesize=EIGHTBITS, stopbits=STOPBITS_ONE)
+    changer = RUChanger(proto)
+    kiosk = Kiosk2(changer)
+    reactor.callLater(0, proto.mdb_init)
+    reactor.callLater(1, kiosk.start)
     #  kiosk = Kiosk(proto)
     #  reactor.callLater(0, kiosk.loop)
-    #  reactor.callLater(3, kiosk.accept, 15)
+    reactor.callLater(3, kiosk.sell, 15)
     #  reactor.callLater(15, kiosk.stop_changer)
     #  ckkklogger.debug("run reactor")
-    #  reactor.run()
+    reactor.run()
