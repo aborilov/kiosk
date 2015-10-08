@@ -80,7 +80,8 @@ class Kiosk2(Machine):
             ['bill_returned',  'return_bill',  'summing',      None,         'check_bill',    None,            None       ],
             ['bill_stacked',   'accept_bill',  'prepare',     'is_enough',    None,          'add_amount',     None       ],
             ['bill_stacked',   'accept_bill',  'summing',      None,         'is_enough',    'add_amount',     None       ],
-            ['prepared',       'prepare',      'dispense',     None,          None,           None,            None       ],
+            ['prepared',       'prepare',      'dispense',     None,         'is_dispensed',  None,            None       ],
+            ['prepared',       'prepare',      'ready',       'is_dispensed', None,           None,           'clear_summ'],
             ['coin_out',       'dispense',     'dispense',     None,         'is_dispensed', 'remove_amount',  None       ],
             ['coin_out',       'dispense',     'ready',       'is_dispensed', None,          'remove_amount', 'clear_summ'],
         ]
@@ -104,10 +105,10 @@ class Kiosk2(Machine):
     def remove_amount(self, amount):
         self.summ -= amount
 
-    def is_dispensed(self, amount):
+    def is_dispensed(self, amount=0):
         return (self.summ - amount - self.product) <= 0
 
-    def clear_summ(self, amount):
+    def clear_summ(self, amount=0):
         self.summ = 0
 
 
