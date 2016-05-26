@@ -14,7 +14,7 @@ logger = logging.getLogger('pymdb')
 class BillValidatorFSM(Machine):
 
     def __init__(self, validator):
-        # TODO проверить состояние приемника перед переходом в ready
+        # TODO РїСЂРѕРІРµСЂРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ РїСЂРёРµРјРЅРёРєР° РїРµСЂРµРґ РїРµСЂРµС…РѕРґРѕРј РІ ready
         
         states = ["offline", "online", "error", "ready",
                   "wait_bill", "check_bill"]
@@ -64,26 +64,26 @@ class BillValidatorFSM(Machine):
         self.validator.start_device()
 
     def stop(self):
-        # TODO сбросить автомат
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         self.validator.stop_device()
 
     def start_accept(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('start accept')
         dispatcher.send_minimal(sender=self, signal='signal_start_accept')
 
     def stop_accept(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('stop accept')
         dispatcher.send_minimal(sender=self, signal='signal_stop_accept')
 
     def valid_bill(self, amount):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('valid bill: {}'.format(amount))
         dispatcher.send_minimal(sender=self, signal='signal_valid_bill', amount=amount)
 
     def invalid_bill(self, amount):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('invalid bill: {}'.format(amount))
         dispatcher.send_minimal(sender=self, signal='signal_invalid_bill', amount=amount)
 
@@ -144,32 +144,31 @@ class ValidatorWrapper(BillValidator):
         super(ValidatorWrapper, self).__init__(proto, bills)
 
     def online(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("validator online")
         dispatcher.send_minimal(
             sender=self, signal='signal_online')
 
     def offline(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("validator offline")
         dispatcher.send_minimal(
             sender=self, signal='signal_offline')
 
     def initialized(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("validator initialized")
         dispatcher.send_minimal(
             sender=self, signal='signal_initialized')
 
     def error(self, error_code, error_text):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("validator error({}): {}".format(ord(error_code), error_text))
         dispatcher.send_minimal(
             sender=self, signal='signal_error', error_code=error_code, error_text=error_text)
 
     def deposited(self, coin, routing=1, in_tube=None):
-        #TODO обработать MachineError
-        #TODO реализация
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         return
 #         amount = self.get_coin_amount(coin)
 #         logger.debug(

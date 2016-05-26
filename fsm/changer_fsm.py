@@ -14,7 +14,7 @@ logger = logging.getLogger('pymdb')
 class ChangerFSM(Machine):
 
     def __init__(self, changer):
-        # TODO проверить состояние приемника перед переходом в ready
+        # TODO РїСЂРѕРІРµСЂРёС‚СЊ СЃРѕСЃС‚РѕСЏРЅРёРµ РїСЂРёРµРјРЅРёРєР° РїРµСЂРµРґ РїРµСЂРµС…РѕРґРѕРј РІ ready
         
         states = ["offline", "online", "error", "ready",
                   "wait_coin", "check_coin", "dispense_amount"]
@@ -74,38 +74,38 @@ class ChangerFSM(Machine):
         self.changer.start_device()
 
     def stop(self):
-        # TODO сбросить автомат
+        # TODO СЃР±СЂРѕСЃРёС‚СЊ Р°РІС‚РѕРјР°С‚
         self.changer.stop_device()
 
     def start_accept(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('start accept')
         dispatcher.send_minimal(sender=self, signal='signal_start_accept')
 
     def stop_accept(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('stop accept')
         dispatcher.send_minimal(sender=self, signal='signal_stop_accept')
 
     def dispense_amount(self, amount):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('dispense amount: {}'.format(amount))
         if (amount <= 0):
             return
         dispatcher.send_minimal(sender=self, signal='signal_dispense_amount', amount=amount)
 
     def stop_dispense_amount(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('stop dispense amount')
         dispatcher.send_minimal(sender=self, signal='signal_stop_dispense')
 
     def valid_coin(self, amount):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('valid coin: {}'.format(amount))
         dispatcher.send_minimal(sender=self, signal='signal_valid_coin', amount=amount)
 
     def invalid_coin(self, amount):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug('invalid coin: {}'.format(amount))
         dispatcher.send_minimal(sender=self, signal='signal_invalid_coin', amount=amount)
 
@@ -151,7 +151,7 @@ class ChangerFSM(Machine):
         self._dispensed_amount = amount
         reactor.callLater(0, self._dispense_amount_impl, amount=amount)
  
-    #TODO отдельно выделить и оптимизировать алгоритм определения возможности выдачи сдачи
+    #TODO Р’С‹РґРµР»РёС‚СЊ Р°Р»РіРѕСЂРёС‚Рј РІ РѕС‚РґРµР»СЊРЅС‹Р№ РјРµС‚РѕРґ
     
     def _dispense_amount_impl(self, amount):
         balance = amount
@@ -180,7 +180,7 @@ class ChangerFSM(Machine):
         while dispense_count > 0:
             coin_count = dispense_count if dispense_count <= 0xf else 0xf
             logger.debug("__dispense_amount_impl: need dispense {} coins({})".format(coin_count, coin))
-            # TODO ожидать выполнения предыдущей операции (разобраться, почему не всегда выдает необходимую сумму)
+            # TODO РѕР¶РёРґР°С‚СЊ РѕРєРѕРЅС‡Р°РЅРёСЏ РІС‹РґР°С‡Рё СЃРґР°С‡Рё
             self.changer.dispense(coin=coin, count=coin_count)
             dispense_count -= coin_count
         
@@ -236,31 +236,31 @@ class ChangerWrapper(Changer):
         super(ChangerWrapper, self).__init__(proto, coins)
 
     def online(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("changer online")
         dispatcher.send_minimal(
             sender=self, signal='signal_online')
 
     def offline(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("changer offline")
         dispatcher.send_minimal(
             sender=self, signal='signal_offline')
 
     def initialized(self):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("changer initialized")
         dispatcher.send_minimal(
             sender=self, signal='signal_initialized')
 
     def error(self, error_code, error_text):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         logger.debug("changer error({}): {}".format(ord(error_code), error_text))
         dispatcher.send_minimal(
             sender=self, signal='signal_error', error_code=error_code, error_text=error_text)
 
     def deposited(self, coin, routing=1, in_tube=None):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         amount = self.get_coin_amount(coin)
         logger.debug(
             "Coin deposited({}): {}".format(COINT_ROUTING[routing], amount))
@@ -269,7 +269,7 @@ class ChangerWrapper(Changer):
                 sender=self, signal='signal_coin_in', amount=amount)
 
     def dispensed(self, coin, count, in_tube=None):
-        #TODO обработать MachineError
+        #TODO РѕР±СЂР°Р±РѕС‚Р°С‚СЊ MachineError
         amount = self.get_coin_amount(coin)
         logger.debug(
             "Coin dispensed({}): {}".format(count, amount))
