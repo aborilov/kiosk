@@ -21,8 +21,8 @@ class CashFSM(Machine):
         transitions = [
             # trigger,                   source,            dest,              conditions,      unless,             before,             after
             ['start',                    'init',            'wait_ready',       None,            None,               None,              '_after_started'        ],
-            ['changer_ready',            'wait_ready',      'ready',           '_is_ready',      None,               None,              None                    ],
-            ['validator_ready',          'wait_ready',      'ready',           '_is_ready',      None,               None,              None                    ],
+            ['changer_ready',            'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
+            ['validator_ready',          'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
             ['coin_in',                  'ready',           'ready',            None,            None,              '_dispense_amount', None                    ],
             ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
             ['accept',                   'ready',           'accept_amount',    None,            None,               None,              '_start_accept'         ],
@@ -36,7 +36,7 @@ class CashFSM(Machine):
             ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',        None                    ],
             ['dispense_all',             'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_all'         ],
             ['dispense_change',          'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_change'      ],
-            ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,              None                    ],
+            ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,              '_amount_dispensed'     ],
              
             ['changer_error',            'ready',           'error',            None,            None,               None,              '_after_error'          ],
             ['changer_error',            'accept_amount',   'error',            None,            None,               None,              '_after_error'          ],
@@ -107,6 +107,10 @@ class CashFSM(Machine):
         return ((self.changer_state == DEVICE_STATE_READY) and
                 (self.validator_state == DEVICE_STATE_READY))
     
+    def _after_ready(self):
+        dispatcher.send_minimal(
+            sender=self, signal='ready')
+        
     def _dispense_amount(self, amount):
         self.changer_fsm.dispense_amount(amount)
     
@@ -138,6 +142,10 @@ class CashFSM(Machine):
         accepted_amount = self._accepted_amount + amount
         dispatcher.send_minimal(
             sender=self, signal='accepted', amount=accepted_amount)
+
+    def _amount_dispensed(self):
+        dispatcher.send_minimal(
+            sender=self, signal='dispensed')
         
     def _is_enough(self, amount):
         return self._need_accept_amount <= self._accepted_amount + amount
