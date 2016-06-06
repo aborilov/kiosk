@@ -1,10 +1,9 @@
 import logging
 
+from louie import dispatcher
+from transitions import Machine
 from twisted.internet import reactor, defer
 
-from louie import dispatcher
-
-from transitions import Machine
 
 logger = logging.getLogger('pymdb')
 

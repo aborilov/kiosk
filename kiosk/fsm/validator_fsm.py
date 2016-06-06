@@ -1,12 +1,9 @@
 import logging
 
-from twisted.internet import reactor, defer
-
 from louie import dispatcher
-
-from transitions import Machine
-
 from pymdb.device.bill_validator import BillValidator, BILL_ROUTING
+from transitions import Machine
+from twisted.internet import reactor, defer
 
 
 logger = logging.getLogger('pymdb')

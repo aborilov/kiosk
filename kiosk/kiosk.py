@@ -3,25 +3,21 @@
 import logging
 import logging.handlers
 
-from transitions import logger as tr_logger
-
-from louie import plugin
 from louie import dispatcher
-
+from louie import plugin
+from pymdb.device.bill_validator import BillValidator
+from pymdb.device.changer import Changer, COINT_ROUTING
+from pymdb.protocol.mdb import MDB
+from serial import EIGHTBITS
+from serial import PARITY_NONE
+from serial import STOPBITS_ONE
 from transitions import Machine
-
+from transitions import logger as tr_logger
 from twisted.internet import reactor, defer
 from twisted.internet.serialport import SerialPort
 
-from serial import PARITY_NONE
-from serial import STOPBITS_ONE
-from serial import EIGHTBITS
-
-from pymdb.protocol.mdb import MDB
-from pymdb.device.changer import Changer, COINT_ROUTING
-from pymdb.device.bill_validator import BillValidator
-
 from ..fsm.changer_fsm import ChangerWrapper, ChangerFSM
+
 
 plugin.install_plugin(plugin.TwistedDispatchPlugin())
 
