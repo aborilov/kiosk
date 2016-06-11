@@ -11,7 +11,6 @@ logger = logging.getLogger('pymdb')
 class BillValidatorFSM(Machine):
 
     def __init__(self, validator):
-        # TODO проверить состояние приемника перед переходом в ready
         
         states = ["offline", "online", "error", "ready",
                   "wait_bill", "bill_confirm"]
@@ -38,7 +37,7 @@ class BillValidatorFSM(Machine):
             ['offline',                'bill_confirm',    'offline',          None,           None,            None,            '_after_offline'    ],
         ]
         super(BillValidatorFSM, self).__init__(
-            states=states, transitions=transitions, initial='offline')
+            states=states, transitions=transitions, initial='offline', ignore_invalid_triggers=True)
         self.validator = validator
         dispatcher.connect(self.online, sender=validator, signal='online')
         dispatcher.connect(self.initialized, sender=validator, signal='initialized')
@@ -52,7 +51,6 @@ class BillValidatorFSM(Machine):
         self.validator.start_device()
 
     def stop(self):
-        #TODO обработать MachineError
         self.validator.stop_device()
 
     def _after_online(self):
@@ -87,21 +85,13 @@ class BillValidatorFSM(Machine):
         self.validator.stop_accept()
         
 
-    def _ban_bill(self):
-        #TODO discard bill
+    def _ban_bill(self, amount=0):
         #TODO wait until bill returned. Maybe need to add a new FSM state return_bill
-        return
-#         if amount < 0:
-#             amount = self._check_coin_amount
-#         logger.debug("_discard_coin: {}".format(amount))
-#         reactor.callLater(0, self._dispense_amount_impl, amount=amount)
+        self.validator.return_bill()
 
     def _permit_bill(self):
-        #TODO accept bill
         #TODO wait until bill accepted. Maybe need to add a new FSM state accept_bill
+        self.validator.stack_bill()
         dispatcher.send_minimal(
             sender=self, signal='bill_in', amount=self._accepted_amount)
-#         logger.debug("_check_bill: amount={}".format(amount))
-#         self._check_coin_amount = amount
-#         self.check_coin(amount)
 

@@ -19,7 +19,7 @@ class ChangerFSM(Machine):
             ['online',                 'offline',         'online',           None,           None,            None,            '_after_online'     ],
             ['initialized',            'online',          'ready',            None,           None,            None,            '_after_init'       ],
             ['start_accept',           'ready',           'wait_coin',        None,           None,            None,            '_start_accept'     ],
-            ['dispense_amount',        'ready',           'dispense_amount',  None,           None,            None,            '_start_dispense'   ],
+            ['start_dispense',         'ready',           'dispense_amount',  None,           None,            None,            '_start_dispense'   ],
             ['coin_in',                'wait_coin',       'ready',            None,           None,           '_stop_accept',   '_coin_in'          ],
             ['stop_accept',            'wait_coin',       'ready',            None,           None,           '_stop_accept',    None               ],
             ['coin_out',               'dispense_amount', 'dispense_amount',  None,          '_is_dispensed', '_remove_amount',  None               ],
@@ -27,6 +27,7 @@ class ChangerFSM(Machine):
             ['stop_dispense',          'dispense_amount', 'ready',            None,           None,            None,            '_amount_dispensed' ],
             
             ['coin_in',                'ready',           'ready',            None,           None,           '_stop_accept',   '_coin_in'          ],
+            ['coin_in',                'dispense_amount', 'dispense_amount',  None,           None,           '_stop_accept',   '_coin_in'          ],
             
             ['error',                  'online',          'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'ready',           'error',            None,           None,            None,            '_after_error'      ],
@@ -40,7 +41,7 @@ class ChangerFSM(Machine):
             
         ]
         super(ChangerFSM, self).__init__(
-            states=states, transitions=transitions, initial='offline')
+            states=states, transitions=transitions, initial='offline', ignore_invalid_triggers=True)
         self.changer = changer
         dispatcher.connect(self.online, sender=changer, signal='online')
         dispatcher.connect(self.initialized, sender=changer, signal='initialized')
@@ -51,12 +52,13 @@ class ChangerFSM(Machine):
         
         # init parameters
         self._dispensed_amount = 0
+        self._need_dispense_amount = 0
     
     def start(self):
         self.changer.start_device()
 
     def stop(self):
-        # TODO сбросить автомат
+        # TODO reset machine
         self.changer.stop_device()
     
     def _after_online(self):
@@ -76,7 +78,7 @@ class ChangerFSM(Machine):
         dispatcher.send_minimal(
             sender=self, signal='error', error_code=error_code, error_text=error_text)
 
-    def _amount_dispensed(self):
+    def _amount_dispensed(self, amount=0):
         dispatcher.send_minimal(
             sender=self, signal='amount_dispensed', amount=self._dispensed_amount)
 
@@ -87,12 +89,13 @@ class ChangerFSM(Machine):
     def _start_accept(self):
         self.changer.start_accept()
 
-    def _stop_accept(self):
+    def _stop_accept(self, amount=-1):
         self.changer.stop_accept()
 
     def _start_dispense(self, amount):
-        self._dispensed_amount = amount
-        reactor.callLater(1, self._dispense_amount_impl, amount=amount)
+        self._need_dispense_amount = amount
+        self._dispensed_amount = 0
+        reactor.callLater(0, self._dispense_amount_impl, amount=amount)
  
     def _dispense_amount_impl(self, amount):
         if amount <= 0:
@@ -101,11 +104,11 @@ class ChangerFSM(Machine):
 
     def _remove_amount(self, amount):
         logger.debug("_remove_amount: {}".format(amount))
-        self._dispensed_amount -= amount
+        self._dispensed_amount += amount
 
     def _is_dispensed(self, amount):
         logger.debug("_is_dispensed: {}".format(amount))
-        return self._dispensed_amount - amount <= 0
+        return self._need_dispense_amount <= self._dispensed_amount + amount
 
     def can_dispense_amount(self, amount):
-        return changer.can_dispense_amount(amount)
+        return self.changer.can_dispense_amount(amount)
