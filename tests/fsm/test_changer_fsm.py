@@ -751,4 +751,3 @@ class TestChangerFsm(TestCase):
         self.assertEquals(changer_stop_accept_expected_args_list, self.changer.stop_accept.call_args_list)
         self.assertEquals(changer_dispense_amount_expected_args_list, self.changer.dispense_amount.call_args_list)
             
-    
