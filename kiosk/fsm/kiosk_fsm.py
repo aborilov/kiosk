@@ -2,8 +2,6 @@ import logging
 
 from louie import dispatcher
 from transitions import Machine
-from twisted.internet import reactor, defer
-
 
 logger = logging.getLogger('pymdb')
 
@@ -32,7 +30,7 @@ class KioskFSM(Machine):
             
         ]
         super(KioskFSM, self).__init__(
-            states=states, transitions=transitions, initial='init')
+            states=states, transitions=transitions, initial='init', ignore_invalid_triggers=True)
         
         self.plc = plc
         self.cash_fsm = cash_fsm

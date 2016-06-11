@@ -74,29 +74,64 @@ class TestValidatorFsm(TestCase):
 
 
 
-    def test_1(self):
+    def test_1_on_offline(self):
         self.check_outputs()
 
 
-    def test_2(self):
+    def test_2_validator_online_on_offline(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='online')
 
         self.check_outputs(fsm_online_expected_args_list=[()])
 
 
-    def test_3_10(self):
+    def test_3_validator_offline_on_offline(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
+
+        self.check_outputs()
+
+
+    def test_4_validator_error_on_offline(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text="error_12")
+
+        self.check_outputs()
+
+
+    def test_5_validator_initialized_on_offline(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='initialized')
+
+        self.check_outputs()
+
+
+    def test_6_check_bill_on_offline(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
+
+        self.check_outputs()
+
+
+    def test_7_start_accept_on_offline(self):
         self.validator_fsm.start_accept()
+
+        self.check_outputs()
+
+
+    def test_8_stop_accept_on_offline(self):
         self.validator_fsm.stop_accept()
+
+        self.check_outputs()
+
+
+    def test_9_ban_bill_on_offline(self):
         self.validator_fsm.ban_bill()
+
+        self.check_outputs()
+
+
+    def test_10_permit_bill_on_offline(self):
         self.validator_fsm.permit_bill()
 
         self.check_outputs()
@@ -130,9 +165,9 @@ class TestValidatorFsm(TestCase):
     # validator.start_accept    -    -    -    +    -    -    -    -    -
     # validator.stop_accept     -    -    +    -    -    -    -    -    -
     # validator.stack_bill      -    -    -    -    -    -    -    -    -
-    # validator.return_bill     -    -    -    -    -    -    -    -    -
+    # validator.return_bill     -    -    +    -    -    -    -    -    -
 
-    def test_11(self):
+    def test_11_validator_online_on_online(self):
         self.set_fsm_state_online()
         
         dispatcher.send_minimal(
@@ -141,7 +176,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_12(self):
+    def test_12_validator_offline_on_online(self):
         self.set_fsm_state_online()
         
         dispatcher.send_minimal(
@@ -150,17 +185,18 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_offline_expected_args_list=[()])
 
 
-    def test_13(self):
+    def test_13_validator_error_on_online(self):
         self.set_fsm_state_online()
         
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text='error_12')
         
         self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()])
+                           validator_stop_accept_expected_args_list=[()],
+                           validator_return_bill_expected_args_list=[()])
 
 
-    def test_14(self):
+    def test_14_validator_initialized_on_online(self):
         self.set_fsm_state_online()
         
         dispatcher.send_minimal(
@@ -170,12 +206,32 @@ class TestValidatorFsm(TestCase):
                            validator_start_accept_expected_args_list=[()])
 
 
-    def test_15_19(self):
+    def test_15_check_bill_on_online(self):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
+
+        self.check_outputs()
+
+
+    def test_16_start_accept_on_online(self):
         self.validator_fsm.start_accept()
+
+        self.check_outputs()
+
+
+    def test_17_stop_accept_on_online(self):
         self.validator_fsm.stop_accept()
+
+        self.check_outputs()
+
+
+    def test_18_ban_bill_on_online(self):
         self.validator_fsm.ban_bill()
+
+        self.check_outputs()
+
+
+    def test_18_permit_bill_on_online(self):
         self.validator_fsm.permit_bill()
 
         self.check_outputs()
@@ -211,7 +267,7 @@ class TestValidatorFsm(TestCase):
     # validator.stack_bill      -    -    -    -    -    -    -    -    -
     # validator.return_bill     -    -    -    -    -    -    -    -    -
 
-    def test_20(self):
+    def test_20_validator_online_on_error(self):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
@@ -220,7 +276,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_21(self):
+    def test_21_validator_offline_on_error(self):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
@@ -229,18 +285,60 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_offline_expected_args_list=[()])
 
 
-    def test_22_28(self):
+    def test_22_validator_error_on_error(self):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text="error_12")
+
+        self.check_outputs()
+
+
+    def test_23_validator_initialized_on_error(self):
+        self.set_fsm_state_error()
+        
         dispatcher.send_minimal(
             sender=self.validator, signal='initialized')
+
+        self.check_outputs()
+
+
+    def test_24_check_bill_on_error(self):
+        self.set_fsm_state_error()
+        
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
+
+        self.check_outputs()
+
+
+    def test_25_start_accept_on_error(self):
+        self.set_fsm_state_error()
+        
         self.validator_fsm.start_accept()
+
+        self.check_outputs()
+
+
+    def test_26_stop_accept_on_error(self):
+        self.set_fsm_state_error()
+        
         self.validator_fsm.stop_accept()
+
+        self.check_outputs()
+
+
+    def test_27_ban_bill_on_error(self):
+        self.set_fsm_state_error()
+        
         self.validator_fsm.ban_bill()
+
+        self.check_outputs()
+
+
+    def test_28_permit_bill_on_error(self):
+        self.set_fsm_state_error()
+        
         self.validator_fsm.permit_bill()
 
         self.check_outputs()
@@ -274,10 +372,10 @@ class TestValidatorFsm(TestCase):
     # validator.start_accept    -    -    -    -    -    +    -    -    -
     # validator.stop_accept     -    -    +    -    -    -    -    -    -
     # validator.stack_bill      -    -    -    -    -    -    -    -    -
-    # validator.return_bill     -    -    -    -    +    -    -    -    -
+    # validator.return_bill     -    -    +    -    +    -    -    -    -
 
 
-    def test_29(self):
+    def test_29_validator_online_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
@@ -286,7 +384,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_30(self):
+    def test_30_validator_offline_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
@@ -295,17 +393,18 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_offline_expected_args_list=[()])
 
 
-    def test_31(self):
+    def test_31_validator_error_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text='error_12')
         
         self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()])
+                           validator_stop_accept_expected_args_list=[()],
+                           validator_return_bill_expected_args_list=[()])
 
 
-    def test_32(self):
+    def test_32_validator_initialized_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
@@ -314,7 +413,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_33(self):
+    def test_33_check_bill_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
@@ -323,7 +422,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(validator_return_bill_expected_args_list=[()])
 
 
-    def test_34(self):
+    def test_34_start_accept_on_ready(self):
         self.set_fsm_state_initialized()
 
         self.validator_fsm.start_accept()
@@ -331,11 +430,25 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(validator_start_accept_expected_args_list=[()])
 
 
-    def test_35_37(self):
+    def test_35_stop_accept_on_ready(self):
         self.set_fsm_state_initialized()
 
         self.validator_fsm.stop_accept()
+
+        self.check_outputs()
+
+
+    def test_36_ban_bill_on_ready(self):
+        self.set_fsm_state_initialized()
+
         self.validator_fsm.ban_bill()
+
+        self.check_outputs()
+
+
+    def test_37_permit_bill_on_ready(self):
+        self.set_fsm_state_initialized()
+
         self.validator_fsm.permit_bill()
 
         self.check_outputs()
@@ -369,10 +482,10 @@ class TestValidatorFsm(TestCase):
     # validator.start_accept    -    -    -    -    -    -    -    -    -
     # validator.stop_accept     -    -    +    -    -    -    -    -    -
     # validator.stack_bill      -    -    -    -    -    -    -    -    -
-    # validator.return_bill     -    -    -    -    -    -    -    -    -
+    # validator.return_bill     -    -    +    -    -    -    -    -    -
 
 
-    def test_38(self):
+    def test_38_validator_online_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
         
         dispatcher.send_minimal(
@@ -381,7 +494,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_39(self):
+    def test_39_validator_offline_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
         
         dispatcher.send_minimal(
@@ -390,17 +503,18 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_offline_expected_args_list=[()])
 
 
-    def test_40(self):
+    def test_40_validator_error_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
 
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text='error_12')
         
         self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()])
+                           validator_stop_accept_expected_args_list=[()],
+                           validator_return_bill_expected_args_list=[()])
 
 
-    def test_41(self):
+    def test_41_validator_initialized_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
         
         dispatcher.send_minimal(
@@ -409,7 +523,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_42(self):
+    def test_42_check_bill_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
         
         dispatcher.send_minimal(
@@ -418,12 +532,33 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_check_bill_expected_args_list=[({'amount':1,},)])
 
 
-    def test_43_46(self):
+    def test_43_start_accept_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
         
         self.validator_fsm.start_accept()
+
+        self.check_outputs()
+
+
+    def test_44_stop_accept_on_wait_bill(self):
+        self.set_fsm_state_wait_bill()
+        
         self.validator_fsm.stop_accept()
+
+        self.check_outputs()
+
+
+    def test_45_ban_bill_on_wait_bill(self):
+        self.set_fsm_state_wait_bill()
+        
         self.validator_fsm.ban_bill()
+
+        self.check_outputs()
+
+
+    def test_46_permit_bill_on_wait_bill(self):
+        self.set_fsm_state_wait_bill()
+        
         self.validator_fsm.permit_bill()
 
         self.check_outputs()
@@ -457,10 +592,10 @@ class TestValidatorFsm(TestCase):
     # validator.start_accept    -    -    -    -    -    -    -    -    -
     # validator.stop_accept     -    -    +    -    -    -    -    -    -
     # validator.stack_bill      -    -    -    -    -    -    -    -    +
-    # validator.return_bill     -    -    -    -    -    -    -    +    -
+    # validator.return_bill     -    -    +    -    -    -    -    +    -
 
 
-    def test_47(self):
+    def test_47_validator_online_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
         
         dispatcher.send_minimal(
@@ -469,7 +604,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs()
 
 
-    def test_48(self):
+    def test_48_validator_offline_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
         
         dispatcher.send_minimal(
@@ -478,30 +613,52 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(fsm_offline_expected_args_list=[()])
 
 
-    def test_49(self):
+    def test_49_validator_error_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
 
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code=12, error_text='error_12')
         
         self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()])
+                           validator_stop_accept_expected_args_list=[()],
+                           validator_return_bill_expected_args_list=[()])
 
 
-    def test_50_53(self):
+    def test_50_validator_initialized_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
         
         dispatcher.send_minimal(
             sender=self.validator, signal='initialized')
+
+        self.check_outputs()
+
+
+    def test_51_check_bill_on_bill_confirm(self):
+        self.set_fsm_state_bill_confirm()
+        
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
+
+        self.check_outputs()
+
+
+    def test_52_start_accept_on_bill_confirm(self):
+        self.set_fsm_state_bill_confirm()
+        
         self.validator_fsm.start_accept()
+
+        self.check_outputs()
+
+
+    def test_53_stop_accept_on_bill_confirm(self):
+        self.set_fsm_state_bill_confirm()
+        
         self.validator_fsm.stop_accept()
 
         self.check_outputs()
 
 
-    def test_54(self):
+    def test_54_ban_bill_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
         
         self.validator_fsm.ban_bill()
@@ -509,7 +666,7 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(validator_return_bill_expected_args_list=[()])
 
 
-    def test_55(self):
+    def test_55_permit_bill_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm(amount=10)
         
         self.validator_fsm.permit_bill()
@@ -525,19 +682,16 @@ class TestValidatorFsm(TestCase):
         
         
     def set_fsm_state_error(self):
-        dispatcher.send_minimal(
-            sender=self.validator, signal='online')
-        self.fsm_listener.online.reset_mock()
+        self.set_fsm_state_online()
         dispatcher.send_minimal(
             sender=self.validator, signal='error', error_code='12', error_text='error_12')
         self.fsm_listener.error.reset_mock()
         self.validator.stop_accept.reset_mock()
+        self.validator.return_bill.reset_mock()
         
         
     def set_fsm_state_initialized(self):
-        dispatcher.send_minimal(
-            sender=self.validator, signal='online')
-        self.fsm_listener.online.reset_mock()
+        self.set_fsm_state_online()
         dispatcher.send_minimal(
             sender=self.validator, signal='initialized')
         self.fsm_listener.initialized.reset_mock()
@@ -545,25 +699,13 @@ class TestValidatorFsm(TestCase):
 
 
     def set_fsm_state_wait_bill(self):
-        dispatcher.send_minimal(
-            sender=self.validator, signal='online')
-        self.fsm_listener.online.reset_mock()
-        dispatcher.send_minimal(
-            sender=self.validator, signal='initialized')
-        self.fsm_listener.initialized.reset_mock()
+        self.set_fsm_state_initialized()
         self.validator_fsm.start_accept()
         self.validator.start_accept.reset_mock()
 
 
     def set_fsm_state_bill_confirm(self, amount=10):
-        dispatcher.send_minimal(
-            sender=self.validator, signal='online')
-        self.fsm_listener.online.reset_mock()
-        dispatcher.send_minimal(
-            sender=self.validator, signal='initialized')
-        self.fsm_listener.initialized.reset_mock()
-        self.validator_fsm.start_accept()
-        self.validator.start_accept.reset_mock()
+        self.set_fsm_state_wait_bill()
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=amount)
         self.fsm_listener.check_bill.reset_mock()

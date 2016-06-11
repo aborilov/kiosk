@@ -2,7 +2,6 @@ import logging
 
 from louie import dispatcher
 from transitions import Machine
-from twisted.internet import reactor, defer
 
 
 logger = logging.getLogger('pymdb')
@@ -19,23 +18,32 @@ class CashFSM(Machine):
                   "accept_amount", "wait_dispense", "start_dispense"]
         transitions = [
             # trigger,                   source,            dest,              conditions,      unless,             before,             after
-            ['start',                    'init',            'wait_ready',       None,            None,               None,              '_after_started'        ],
+            ['start',                    'init',            'wait_ready',       None,            '_is_ready',        None,              '_after_started'        ],
+            ['start',                    'init',            'ready',           '_is_ready',      None,              '_after_started',   '_after_ready'          ],
             ['changer_ready',            'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
             ['validator_ready',          'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
             ['coin_in',                  'ready',           'ready',            None,            None,              '_dispense_amount', None                    ],
-            ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
+#             ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
             ['accept',                   'ready',           'accept_amount',    None,            None,               None,              '_start_accept'         ],
             ['accept_timeout',           'accept_amount',   'ready',            None,            None,               None,              '_after_accept_timeout' ],
             ['coin_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',       None,              '_add_amount'           ],
+            ['bill_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',       None,              '_add_amount'           ],
             ['check_bill',               'accept_amount',   'accept_amount',    None,            '_is_valid_bill',  '_ban_bill',        None                    ],
-            ['check_bill',               'accept_amount',   'accept_amount',   '_is_valid_bill', '_is_enough',      '_permit_bill',     '_add_amount'           ],
+            ['check_bill',               'accept_amount',   'accept_amount',   '_is_valid_bill', None,              '_permit_bill',     None                    ],
             ['coin_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,              '_after_accept'         ],
-            ['check_bill',               'accept_amount',   'wait_dispense',   '_is_enough',     'is_invalid_bill', '_permit_bill',     '_after_accept'         ],
+            ['bill_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,              '_after_accept'         ],
             ['coin_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',      '_amount_accepted'      ],
-            ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',        None                    ],
+            ['bill_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',      '_amount_accepted'      ],
             ['dispense_all',             'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_all'         ],
             ['dispense_change',          'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_change'      ],
             ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,              '_amount_dispensed'     ],
+            
+            ['check_bill',               'init',            'init',             None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'wait_ready',      'wait_ready',       None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'start_dispense',  'start_dispense',   None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'error',           'error',            None,            None,              '_ban_bill',        None                    ],
              
             ['changer_error',            'ready',           'error',            None,            None,               None,              '_after_error'          ],
             ['changer_error',            'accept_amount',   'error',            None,            None,               None,              '_after_error'          ],
@@ -48,7 +56,7 @@ class CashFSM(Machine):
             
         ]
         super(CashFSM, self).__init__(
-            states=states, transitions=transitions, initial='init')
+            states=states, transitions=transitions, initial='init', ignore_invalid_triggers=True)
         
         self.changer_fsm = changer_fsm
         self.validator_fsm = validator_fsm
@@ -70,6 +78,7 @@ class CashFSM(Machine):
         # init parameters
         self._need_accept_amount = 0
         self._accepted_amount = 0
+        self.accept_timeout_sec = 60
 
     def _after_started(self):
         self.changer_fsm.start()
@@ -111,7 +120,7 @@ class CashFSM(Machine):
             sender=self, signal='ready')
         
     def _dispense_amount(self, amount):
-        self.changer_fsm.dispense_amount(amount)
+        self.changer_fsm.start_dispense(amount)
     
     def _ban_bill(self, amount):
         self.validator_fsm.ban_bill(amount)
@@ -130,7 +139,7 @@ class CashFSM(Machine):
     
     def _after_accept_timeout(self):
         self._stop_accept()
-        self.changer_fsm.dispense_amount(self._accepted_amount)
+        self.changer_fsm.start_dispense(self._accepted_amount)
         dispatcher.send_minimal(
             sender=self, signal='not_accepted')
 
@@ -138,17 +147,20 @@ class CashFSM(Machine):
         self._accepted_amount += amount
         
     def _amount_accepted(self, amount=0):
-        accepted_amount = self._accepted_amount + amount
+#         accepted_amount = self._accepted_amount + amount
         dispatcher.send_minimal(
-            sender=self, signal='accepted', amount=accepted_amount)
+            sender=self, signal='accepted', amount=self._accepted_amount)
 
-    def _amount_dispensed(self):
+    def _amount_dispensed(self, amount=0):
         dispatcher.send_minimal(
-            sender=self, signal='dispensed')
+            sender=self, signal='dispensed', amount=amount)
         
     def _is_enough(self, amount):
         return self._need_accept_amount <= self._accepted_amount + amount
 
+    def _is_invalid_bill(self, amount):
+        return not self._is_valid_bill(amount)
+        
     def _is_valid_bill(self, amount):
         accepted_amount = self._accepted_amount + amount
         if not self.changer_fsm.can_dispense_amount(accepted_amount):

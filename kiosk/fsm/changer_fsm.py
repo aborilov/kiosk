@@ -1,9 +1,8 @@
 import logging
 
 from louie import dispatcher
-from pymdb.device.changer import Changer, COINT_ROUTING
 from transitions import Machine
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 
 
 logger = logging.getLogger('pymdb')
@@ -95,7 +94,7 @@ class ChangerFSM(Machine):
     def _start_dispense(self, amount):
         self._need_dispense_amount = amount
         self._dispensed_amount = 0
-        reactor.callLater(0, self._dispense_amount_impl, amount=amount)
+        reactor.callLater(0, self._dispense_amount_impl, amount=amount)#@UndefinedVariable
  
     def _dispense_amount_impl(self, amount):
         if amount <= 0:

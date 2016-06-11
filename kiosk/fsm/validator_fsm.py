@@ -1,9 +1,7 @@
 import logging
 
 from louie import dispatcher
-from pymdb.device.bill_validator import BillValidator, BILL_ROUTING
 from transitions import Machine
-from twisted.internet import reactor, defer
 
 
 logger = logging.getLogger('pymdb')
@@ -68,6 +66,7 @@ class BillValidatorFSM(Machine):
 
     def _after_error(self, error_code, error_text):
         self._stop_accept()
+        self.validator.return_bill()
         dispatcher.send_minimal(
             sender=self, signal='error', error_code=error_code, error_text=error_text)
 
