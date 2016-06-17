@@ -1526,7 +1526,7 @@ class TestCashFsm(unittest.TestCase):
         self.check_outputs(fsm_not_accepted_expected_args_list=[()],
             changer_fsm_stop_accept_expected_args_list=[()],
             validator_fsm_stop_accept_expected_args_list=[()],
-            changer_fsm_start_dispense_expected_args_list=[(9,),])
+            changer_fsm_start_dispense_expected_args_list=[((9,),)])
 
 
     @defer.inlineCallbacks
@@ -1566,7 +1566,7 @@ class TestCashFsm(unittest.TestCase):
         self.check_outputs(fsm_not_accepted_expected_args_list=[()],
             changer_fsm_stop_accept_expected_args_list=[()],
             validator_fsm_stop_accept_expected_args_list=[()],
-            changer_fsm_start_dispense_expected_args_list=[(9,),])
+            changer_fsm_start_dispense_expected_args_list=[((9,),)])
 
     
     @defer.inlineCallbacks
@@ -1972,6 +1972,61 @@ class TestCashFsm(unittest.TestCase):
         self.check_outputs()
 
 
+    #                                            150
+    # inputs
+    # fsm.state("INI",                           AA
+    #          "WR",
+    #          "ERR",
+    #          "RDY",
+    #          "AA",
+    #          "WD",                
+    #          "SD")
+    # accept_timeout = 4 sec                      +
+    #    (not enough payment during timeout)
+    #
+    # outputs
+    # fsm_listener.ready                          -
+    # fsm_listener.accepted                       -
+    # fsm_listener.not_accepted                   +
+    # fsm_listener.dispensed                      -
+    # fsm_listener.error                          -
+    # changer_fsm.start                           -
+    # changer_fsm.start_accept                    -
+    # changer_fsm.stop_accept                     -
+    # changer_fsm.start_dispense                  -
+    # changer_fsm.stop_dispense                   -
+    # validator_fsm.start                         -
+    # validator_fsm.start_accept                  -
+    # validator_fsm.stop_accept                   -
+    # validator_fsm.ban_bill                      -
+    # validator_fsm.permit_bill                   -
+
+    @defer.inlineCallbacks
+    def test_150_accept_timeout_4_sec_on_accept_amount(self):
+        '''
+        check accept timeout exceed in FSM state 'accept_amount' when not enough payment maked during timeout
+        '''
+        self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=4)
+
+        yield self.sleep_defer(sleep_sec=3)
+
+        self.check_outputs()
+
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=9)
+        
+        yield self.sleep_defer(sleep_sec=3)
+        
+        self.check_outputs()
+            
+        yield self.sleep_defer(sleep_sec=2)
+
+        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
+            changer_fsm_stop_accept_expected_args_list=[()],
+            validator_fsm_stop_accept_expected_args_list=[()],
+            changer_fsm_start_dispense_expected_args_list=[((9,),)])
+
+
     def set_fsm_state_wait_ready(self):
         self.cash_fsm.start()
         self.changer_fsm.start.reset_mock()
@@ -1985,8 +2040,9 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.error.reset_mock()
         
         
-    def set_fsm_state_ready(self):
+    def set_fsm_state_ready(self, accept_timeout_sec=0):
         self.set_fsm_state_wait_ready()
+        self.cash_fsm.accept_timeout_sec = accept_timeout_sec
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='initialized')
         dispatcher.send_minimal(
@@ -1994,9 +2050,8 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.ready.reset_mock()
 
 
-    def set_fsm_state_accept_amount(self, amount=10, accept_timeout_sec=2):
-        self.set_fsm_state_ready()
-        self.cash_fsm.accept_timeout_sec = accept_timeout_sec
+    def set_fsm_state_accept_amount(self, amount=10, accept_timeout_sec=0):
+        self.set_fsm_state_ready(accept_timeout_sec=accept_timeout_sec)
         self.cash_fsm.accept(amount=amount)
         self.validator_fsm.start_accept.reset_mock()
         self.changer_fsm.start_accept.reset_mock()

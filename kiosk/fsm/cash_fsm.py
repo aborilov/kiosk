@@ -3,6 +3,7 @@ import logging
 from louie import dispatcher
 from transitions import Machine
 
+from twisted.internet import reactor
 
 logger = logging.getLogger('pymdb')
 
@@ -79,6 +80,8 @@ class CashFSM(Machine):
         self._need_accept_amount = 0
         self._accepted_amount = 0
         self.accept_timeout_sec = 60
+        
+        self._acceptance_monitor_id = None
 
     def _after_started(self):
         self.changer_fsm.start()
@@ -86,6 +89,7 @@ class CashFSM(Machine):
 
     def stop(self):
         # TODO reset FSM
+        self._stop_acceptance_monitor()
         self.changer_fsm.stop()
         self.validator_fsm.stop()
     
@@ -129,6 +133,7 @@ class CashFSM(Machine):
         self.validator_fsm.permit_bill(amount)
     
     def _start_accept(self, amount):
+        self._start_acceptance_monitor()
         self._need_accept_amount = amount
         self.changer_fsm.start_accept()
         self.validator_fsm.start_accept()
@@ -139,12 +144,14 @@ class CashFSM(Machine):
     
     def _after_accept_timeout(self):
         self._stop_accept()
-        self.changer_fsm.start_dispense(self._accepted_amount)
+        if self._accepted_amount > 0:
+            self.changer_fsm.start_dispense(self._accepted_amount)
         dispatcher.send_minimal(
             sender=self, signal='not_accepted')
 
     def _add_amount(self, amount):
         self._accepted_amount += amount
+        self._reset_acceptance_monitor()
         
     def _amount_accepted(self, amount=0):
 #         accepted_amount = self._accepted_amount + amount
@@ -171,6 +178,7 @@ class CashFSM(Machine):
         return True
     
     def _after_accept(self, amount):
+        self._stop_acceptance_monitor()
         self._add_amount(amount)
         self._stop_accept()
         self._amount_accepted()
@@ -183,6 +191,28 @@ class CashFSM(Machine):
         self._dispense_amount(change_amount)
 
     def _after_error(self, error_code, error_text):
+        self._stop_acceptance_monitor()
         self._stop_accept()
         dispatcher.send_minimal(
             sender=self, signal='error', error_code=error_code, error_text=error_text)
+
+
+    def _start_acceptance_monitor(self):
+        self._stop_acceptance_monitor()
+        if self.accept_timeout_sec <= 0:
+            return
+        self._acceptance_monitor_id = reactor.callLater(self.accept_timeout_sec, self.accept_timeout) #@UndefinedVariable
+   
+    
+    def _stop_acceptance_monitor(self):
+        if self._acceptance_monitor_id is None:
+            return
+        self._acceptance_monitor_id.cancel()
+        self._acceptance_monitor_id = None
+   
+    
+    def _reset_acceptance_monitor(self):
+        if self._acceptance_monitor_id is None:
+            return
+        self._acceptance_monitor_id.cancel()
+        self._acceptance_monitor_id = reactor.callLater(self.accept_timeout_sec, self.accept_timeout) #@UndefinedVariable
