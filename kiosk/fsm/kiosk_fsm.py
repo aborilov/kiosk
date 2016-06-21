@@ -12,21 +12,21 @@ class KioskFSM(Machine):
         states = ["init", "wait_ready", "error", "ready",
                   "start_sell", "start_prepare", "start_dispense"]
         transitions = [
-            # trigger,                   source,            dest,              conditions,         unless,             before,             after
-            ['start',                    'init',            'wait_ready',       None,               None,               None,              '_after_started'        ],
-            ['cash_fsm_ready',           'wait_ready',      'ready',            None,               None,               None,              '_after_ready'          ],
-            ['sell',                     'ready',           'start_sell',       'is_valid_product', None,               None,              '_start_sell'           ],
-            ['sell',                     'ready',           'ready',            None,               'is_valid_product', None,              '_reset_sell'           ],
-            ['amount_not_accepted',      'start_sell',      'ready',            None,               None,               None,              '_reset_sell'           ],
-            ['amount_accepted',          'start_sell',      'start_prepare',    None,               None,               None,              '_prepare'              ],
-            ['not_prepared',             'start_prepare',   'start_dispense',   None,               None,               None,              '_dispense_all'         ],
-            ['prepared',                 'start_prepare',   'start_dispense',   None,               None,               None,              '_dispense_change'      ],
-            ['amount_dispensed',         'start_dispense',  'ready',            None,               None,               None,              None                    ],
+            # trigger,                   source,            dest,              conditions,          unless,              before,             after
+            ['start',                    'init',            'wait_ready',       None,                None,                None,              '_after_started'        ],
+            ['cash_fsm_ready',           'wait_ready',      'ready',            None,                None,                None,              '_after_ready'          ],
+            ['sell',                     'ready',           'start_sell',       '_is_valid_product', None,                None,              '_start_sell'           ],
+            ['sell',                     'ready',           'ready',            None,                '_is_valid_product', None,              '_reset_sell'           ],
+            ['amount_not_accepted',      'start_sell',      'ready',            None,                None,                None,              '_reset_sell'           ],
+            ['amount_accepted',          'start_sell',      'start_prepare',    None,                None,                None,              '_prepare'              ],
+            ['not_prepared',             'start_prepare',   'start_dispense',   None,                None,                None,              '_dispense_all'         ],
+            ['prepared',                 'start_prepare',   'start_dispense',   None,                None,                None,              '_dispense_change'      ],
+            ['amount_dispensed',         'start_dispense',  'ready',            None,                None,                None,              '_after_ready'          ],
             
-            ['cash_fsm_error',           'ready',           'error',            None,               None,               None,              '_after_error'          ],
-            ['cash_fsm_error',           'start_sell',      'error',            None,               None,               None,              '_after_error'          ],
-            ['cash_fsm_error',           'start_prepare',   'error',            None,               None,               None,              '_after_error'          ],
-            ['cash_fsm_error',           'start_dispense',  'error',            None,               None,               None,              '_after_error'          ],
+            ['cash_fsm_error',           'ready',           'error',            None,                None,                None,              '_after_error'          ],
+            ['cash_fsm_error',           'start_sell',      'error',            None,                None,                None,              '_after_error'          ],
+            ['cash_fsm_error',           'start_prepare',   'error',            None,                None,                None,              '_after_error'          ],
+            ['cash_fsm_error',           'start_dispense',  'error',            None,                None,                None,              '_after_error'          ],
             
         ]
         super(KioskFSM, self).__init__(
@@ -56,6 +56,8 @@ class KioskFSM(Machine):
     
     def _after_ready(self):
         logger.debug("_after_ready")
+        dispatcher.send_minimal(
+            sender=self, signal='ready')
 
     def _is_valid_product(self, product):
         return product in self.products
@@ -68,8 +70,9 @@ class KioskFSM(Machine):
     def _reset_sell(self, product=-1):
         dispatcher.send_minimal(
             sender=self, signal='reset_sell')
+        self._after_ready()
         
-    def _prepare(self):
+    def _prepare(self, amount=-1):
         self.plc.prepare(self._product)
 
     def _dispense_all(self):
