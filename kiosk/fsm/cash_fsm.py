@@ -18,42 +18,42 @@ class CashFSM(Machine):
         states = ["init", "wait_ready", "error", "ready",
                   "accept_amount", "wait_dispense", "start_dispense"]
         transitions = [
-            # trigger,                   source,            dest,              conditions,      unless,             before,             after
-            ['start',                    'init',            'wait_ready',       None,            '_is_ready',        None,              '_after_started'        ],
-            ['start',                    'init',            'ready',           '_is_ready',      None,              '_after_started',   '_after_ready'          ],
-            ['changer_ready',            'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
-            ['validator_ready',          'wait_ready',      'ready',           '_is_ready',      None,               None,              '_after_ready'          ],
-            ['coin_in',                  'ready',           'ready',            None,            None,              '_dispense_amount', None                    ],
-#             ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
-            ['accept',                   'ready',           'accept_amount',    None,            None,               None,              '_start_accept'         ],
-            ['accept_timeout',           'accept_amount',   'ready',            None,            None,               None,              '_after_accept_timeout' ],
-            ['coin_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',       None,              '_add_amount'           ],
-            ['bill_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',       None,              '_add_amount'           ],
-            ['check_bill',               'accept_amount',   'accept_amount',    None,            '_is_valid_bill',  '_ban_bill',        None                    ],
-            ['check_bill',               'accept_amount',   'accept_amount',   '_is_valid_bill', None,              '_permit_bill',     None                    ],
-            ['coin_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,              '_after_accept'         ],
-            ['bill_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,              '_after_accept'         ],
-            ['coin_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',      '_amount_accepted'      ],
-            ['bill_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',      '_amount_accepted'      ],
-            ['dispense_all',             'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_all'         ],
-            ['dispense_change',          'wait_dispense',   'start_dispense',   None,            None,               None,              '_dispense_change'      ],
-            ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,              '_amount_dispensed'     ],
+            # trigger,                   source,            dest,              conditions,      unless,             before,               after
+            ['start',                    'init',            'wait_ready',       None,            '_is_ready',        None,                '_after_started'        ],
+            ['start',                    'init',            'ready',           '_is_ready',      None,              '_after_started',     '_after_ready'          ],
+            ['changer_ready',            'wait_ready',      'ready',           '_is_ready',      None,               None,                '_after_ready'          ],
+            ['validator_ready',          'wait_ready',      'ready',           '_is_ready',      None,               None,                '_after_ready'          ],
+            ['coin_in',                  'ready',           'ready',            None,            None,              '_dispense_amount',   None                    ],
+#             ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',          None                    ],
+            ['accept',                   'ready',           'accept_amount',    None,            None,               None,                '_start_accept'         ],
+            ['accept_timeout',           'accept_amount',   'ready',            None,            None,               None,                '_after_accept_timeout' ],
+            ['coin_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',      '_start_coin_accept', '_add_amount'           ],
+            ['bill_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',      '_start_bill_accept', '_add_amount'           ],
+            ['check_bill',               'accept_amount',   'accept_amount',    None,            '_is_valid_bill',  '_ban_bill',          None                    ],
+            ['check_bill',               'accept_amount',   'accept_amount',   '_is_valid_bill', None,              '_permit_bill',       None                    ],
+            ['coin_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,                '_after_accept'         ],
+            ['bill_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,                '_after_accept'         ],
+            ['coin_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',        '_amount_accepted'      ],
+            ['bill_in',                  'wait_dispense',   'wait_dispense',    None,            None,              '_add_amount',        '_amount_accepted'      ],
+            ['dispense_all',             'wait_dispense',   'start_dispense',   None,            None,               None,                '_dispense_all'         ],
+            ['dispense_change',          'wait_dispense',   'start_dispense',   None,            None,               None,                '_dispense_change'      ],
+            ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,                '_amount_dispensed'     ],
             
-            ['check_bill',               'init',            'init',             None,            None,              '_ban_bill',        None                    ],
-            ['check_bill',               'wait_ready',      'wait_ready',       None,            None,              '_ban_bill',        None                    ],
-            ['check_bill',               'ready',           'ready',            None,            None,              '_ban_bill',        None                    ],
-            ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',        None                    ],
-            ['check_bill',               'start_dispense',  'start_dispense',   None,            None,              '_ban_bill',        None                    ],
-            ['check_bill',               'error',           'error',            None,            None,              '_ban_bill',        None                    ],
+            ['check_bill',               'init',            'init',             None,            None,              '_ban_bill',          None                    ],
+            ['check_bill',               'wait_ready',      'wait_ready',       None,            None,              '_ban_bill',          None                    ],
+            ['check_bill',               'ready',           'ready',            None,            None,              '_ban_bill',          None                    ],
+            ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',          None                    ],
+            ['check_bill',               'start_dispense',  'start_dispense',   None,            None,              '_ban_bill',          None                    ],
+            ['check_bill',               'error',           'error',            None,            None,              '_ban_bill',          None                    ],
              
-            ['changer_error',            'ready',           'error',            None,            None,               None,              '_after_error'          ],
-            ['changer_error',            'accept_amount',   'error',            None,            None,               None,              '_after_error'          ],
-            ['changer_error',            'wait_dispense',   'error',            None,            None,               None,              '_after_error'          ],
-            ['changer_error',            'start_dispense',  'error',            None,            None,               None,              '_after_error'          ],
-            ['validator_error',          'ready',           'error',            None,            None,               None,              '_after_error'          ],
-            ['validator_error',          'accept_amount',   'error',            None,            None,               None,              '_after_error'          ],
-            ['validator_error',          'wait_dispense',   'error',            None,            None,               None,              '_after_error'          ],
-            ['validator_error',          'start_dispense',  'error',            None,            None,               None,              '_after_error'          ],
+            ['changer_error',            'ready',           'error',            None,            None,               None,                '_after_error'          ],
+            ['changer_error',            'accept_amount',   'error',            None,            None,               None,                '_after_error'          ],
+            ['changer_error',            'wait_dispense',   'error',            None,            None,               None,                '_after_error'          ],
+            ['changer_error',            'start_dispense',  'error',            None,            None,               None,                '_after_error'          ],
+            ['validator_error',          'ready',           'error',            None,            None,               None,                '_after_error'          ],
+            ['validator_error',          'accept_amount',   'error',            None,            None,               None,                '_after_error'          ],
+            ['validator_error',          'wait_dispense',   'error',            None,            None,               None,                '_after_error'          ],
+            ['validator_error',          'start_dispense',  'error',            None,            None,               None,                '_after_error'          ],
             
         ]
         super(CashFSM, self).__init__(
@@ -73,7 +73,7 @@ class CashFSM(Machine):
         dispatcher.connect(self._on_validator_offline, sender=validator_fsm, signal='offline')
         dispatcher.connect(self._on_validator_ready, sender=validator_fsm, signal='initialized')
         dispatcher.connect(self._on_validator_error, sender=validator_fsm, signal='error')
-        dispatcher.connect(self.bill_in, sender=validator_fsm, signal='bill_in')
+        dispatcher.connect(self.bill_in_1, sender=validator_fsm, signal='bill_in')
         dispatcher.connect(self.check_bill, sender=validator_fsm, signal='check_bill')
         
         # init parameters
@@ -83,6 +83,9 @@ class CashFSM(Machine):
         
         self._acceptance_monitor_id = None
 
+    def bill_in_1(self, amount=0):
+        self.bill_in(amount)
+        
     def _after_started(self):
         self.changer_fsm.start()
         self.validator_fsm.start()
@@ -135,7 +138,13 @@ class CashFSM(Machine):
     def _start_accept(self, amount):
         self._start_acceptance_monitor()
         self._need_accept_amount = amount
+        self._start_coin_accept()
+        self._start_bill_accept()
+
+    def _start_coin_accept(self, amount=0):
         self.changer_fsm.start_accept()
+
+    def _start_bill_accept(self, amount=0):
         self.validator_fsm.start_accept()
 
     def _stop_accept(self):

@@ -54,7 +54,7 @@ class KioskFSM(Machine):
         # TODO reset FSM
         self.cash_fsm.stop()
     
-    def _after_ready(self):
+    def _after_ready(self, amount=0):
         logger.debug("_after_ready")
         dispatcher.send_minimal(
             sender=self, signal='ready')

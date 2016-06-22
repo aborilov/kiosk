@@ -1263,7 +1263,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=4)
 
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[(), (), ()])
 
 
     def test_100_coin_in_on_accept_amount(self):
@@ -1275,7 +1275,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=9)
 
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
 
 
     def test_101_coin_in_on_accept_amount(self):
@@ -1304,6 +1304,7 @@ class TestCashFsm(unittest.TestCase):
             sender=self.changer_fsm, signal='coin_in', amount=1)
 
         self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
+                           changer_fsm_start_accept_expected_args_list=[()],
                            changer_fsm_stop_accept_expected_args_list=[()],
                            validator_fsm_stop_accept_expected_args_list=[()])
 
@@ -1320,6 +1321,7 @@ class TestCashFsm(unittest.TestCase):
             sender=self.changer_fsm, signal='coin_in', amount=2)
 
         self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
+                           changer_fsm_start_accept_expected_args_list=[()],
                            changer_fsm_stop_accept_expected_args_list=[()],
                            validator_fsm_stop_accept_expected_args_list=[()])
 
@@ -1351,7 +1353,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=4)
 
-        self.check_outputs()
+        self.check_outputs(validator_fsm_start_accept_expected_args_list=[(), (), ()])
 
 
     def test_106_bill_in_on_accept_amount(self):
@@ -1363,7 +1365,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=9)
 
-        self.check_outputs()
+        self.check_outputs(validator_fsm_start_accept_expected_args_list=[()])
 
 
     def test_107_bill_in_on_accept_amount(self):
@@ -1393,6 +1395,7 @@ class TestCashFsm(unittest.TestCase):
 
         self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
                            changer_fsm_stop_accept_expected_args_list=[()],
+                           validator_fsm_start_accept_expected_args_list=[()],
                            validator_fsm_stop_accept_expected_args_list=[()])
 
 
@@ -1409,6 +1412,7 @@ class TestCashFsm(unittest.TestCase):
 
         self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
                            changer_fsm_stop_accept_expected_args_list=[()],
+                           validator_fsm_start_accept_expected_args_list=[()],
                            validator_fsm_stop_accept_expected_args_list=[()])
 
 
@@ -1519,7 +1523,8 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=1)
         
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -1559,7 +1564,8 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=3)
         
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -2017,7 +2023,8 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=3)
         
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -2103,6 +2110,24 @@ class TestCashFsm(unittest.TestCase):
         self.assertEquals(validator_fsm_stop_accept_expected_args_list, self.validator_fsm.stop_accept.call_args_list)
         self.assertEquals(validator_fsm_ban_bill_expected_args_list, self.validator_fsm.ban_bill.call_args_list)
         self.assertEquals(validator_fsm_permit_bill_expected_args_list, self.validator_fsm.permit_bill.call_args_list)
+
+
+    def reset_outputs(self):
+        self.fsm_listener.ready.reset_mock()
+        self.fsm_listener.accepted.reset_mock()
+        self.fsm_listener.not_accepted.reset_mock()
+        self.fsm_listener.dispensed.reset_mock()
+        self.fsm_listener.error.reset_mock()
+        self.changer_fsm.start.reset_mock()
+        self.changer_fsm.start_accept.reset_mock()
+        self.changer_fsm.stop_accept.reset_mock()
+        self.changer_fsm.start_dispense.reset_mock()
+        self.changer_fsm.stop_dispense.reset_mock()
+        self.validator_fsm.start.reset_mock()
+        self.validator_fsm.start_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
+        self.validator_fsm.ban_bill.reset_mock()
+        self.validator_fsm.permit_bill.reset_mock()
 
 
     def sleep_defer(self, sleep_sec):

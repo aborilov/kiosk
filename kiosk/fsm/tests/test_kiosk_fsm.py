@@ -1,7 +1,5 @@
 from louie import dispatcher
 
-from twisted.internet import reactor, defer, task
-
 #from unittest import TestCase
 from twisted.trial import unittest
 

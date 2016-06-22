@@ -1,6 +1,8 @@
 
 from louie import dispatcher
 
+from twisted.internet import reactor, defer, task
+
 from unittest import TestCase
 
 from kiosk.fsm.validator_fsm import BillValidatorFSM
@@ -666,10 +668,14 @@ class TestValidatorFsm(TestCase):
         self.check_outputs(validator_return_bill_expected_args_list=[()])
 
 
+
+    @defer.inlineCallbacks
     def test_55_permit_bill_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm(amount=10)
         
         self.validator_fsm.permit_bill()
+        
+        yield self.sleep_defer(sleep_sec=0.5)
 
         self.check_outputs(fsm_bill_in_expected_args_list=[({'amount':10,},)],
                            validator_stack_bill_expected_args_list=[()])
@@ -732,3 +738,7 @@ class TestValidatorFsm(TestCase):
         self.assertEquals(validator_stop_accept_expected_args_list, self.validator.stop_accept.call_args_list)
         self.assertEquals(validator_stack_bill_expected_args_list, self.validator.stack_bill.call_args_list)
         self.assertEquals(validator_return_bill_expected_args_list, self.validator.return_bill.call_args_list)
+
+
+    def sleep_defer(self, sleep_sec):
+        return task.deferLater(reactor, sleep_sec, defer.passthru, None)

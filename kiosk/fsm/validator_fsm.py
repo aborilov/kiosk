@@ -1,5 +1,7 @@
 import logging
 
+from twisted.internet import reactor
+
 from louie import dispatcher
 from transitions import Machine
 
@@ -20,7 +22,7 @@ class BillValidatorFSM(Machine):
             ['check_bill',             'wait_bill',       'bill_confirm',     None,           None,            None,            '_check_bill'       ],
             ['stop_accept',            'wait_bill',       'ready',            None,           None,            None,             None               ],
             ['ban_bill',               'bill_confirm',    'ready',            None,           None,           '_ban_bill',       None               ],
-            ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',    None               ],
+            ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',   '_fire_bill_in'     ],
             
             ['check_bill',             'ready',           'ready',            None,           None,           '_ban_bill',       None               ],
             
@@ -88,9 +90,14 @@ class BillValidatorFSM(Machine):
         #TODO wait until bill returned. Maybe need to add a new FSM state return_bill
         self.validator.return_bill()
 
-    def _permit_bill(self):
+    def _permit_bill(self, amount=0):
         #TODO wait until bill accepted. Maybe need to add a new FSM state accept_bill
         self.validator.stack_bill()
+
+
+    def _fire_bill_in(self, amount=0):
+        reactor.callLater(0, self._fire_bill_in_impl, amount=amount) #@UndefinedVariable
+
+    def _fire_bill_in_impl(self, amount=0):
         dispatcher.send_minimal(
             sender=self, signal='bill_in', amount=self._accepted_amount)
-
