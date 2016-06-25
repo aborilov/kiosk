@@ -4,6 +4,7 @@ from louie import dispatcher
 from transitions import Machine
 
 from twisted.internet import reactor
+from twisted.internet.error import AlreadyCalled
 
 logger = logging.getLogger('pymdb')
 
@@ -27,9 +28,11 @@ class CashFSM(Machine):
 #             ['bill_in',                  'ready',           'ready',            None,            None,              '_ban_bill',          None                    ],
             ['accept',                   'ready',           'accept_amount',    None,            None,               None,                '_start_accept'         ],
             ['accept_timeout',           'accept_amount',   'ready',            None,            None,               None,                '_after_accept_timeout' ],
+            ['changer_ready',            'accept_amount',   'accept_amount',    None,            None,               None,                '_start_coin_accept'    ],
+            ['validator_ready',          'accept_amount',   'accept_amount',    None,            None,               None,                '_start_bill_accept'    ],
             ['coin_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',      '_start_coin_accept', '_add_amount'           ],
             ['bill_in',                  'accept_amount',   'accept_amount',    None,            '_is_enough',      '_start_bill_accept', '_add_amount'           ],
-            ['check_bill',               'accept_amount',   'accept_amount',    None,            '_is_valid_bill',  '_ban_bill',          None                    ],
+            ['check_bill',               'accept_amount',   'accept_amount',    None,            '_is_valid_bill',  '_ban_bill',          '_start_bill_accept'    ],
             ['check_bill',               'accept_amount',   'accept_amount',   '_is_valid_bill', None,              '_permit_bill',       None                    ],
             ['coin_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,                '_after_accept'         ],
             ['bill_in',                  'accept_amount',   'wait_dispense',   '_is_enough',     None,               None,                '_after_accept'         ],
@@ -45,6 +48,9 @@ class CashFSM(Machine):
             ['check_bill',               'wait_dispense',   'wait_dispense',    None,            None,              '_ban_bill',          None                    ],
             ['check_bill',               'start_dispense',  'start_dispense',   None,            None,              '_ban_bill',          None                    ],
             ['check_bill',               'error',           'error',            None,            None,              '_ban_bill',          None                    ],
+
+            ['dispense_all',             'error',           'error',            None,            None,               None,                '_dispense_all'         ],
+            ['dispense_change',          'error',           'error',            None,            None,               None,                '_dispense_change'      ],
              
             ['changer_error',            'ready',           'error',            None,            None,               None,                '_after_error'          ],
             ['changer_error',            'accept_amount',   'error',            None,            None,               None,                '_after_error'          ],
@@ -193,10 +199,15 @@ class CashFSM(Machine):
         self._amount_accepted()
         
     def _dispense_all(self):
-        self._dispense_amount(self._accepted_amount)
+        dispensed_amount = self._accepted_amount
+        self._accepted_amount = 0
+        self._need_accept_amount = 0
+        self._dispense_amount(dispensed_amount)
             
     def _dispense_change(self):
         change_amount = self._accepted_amount - self._need_accept_amount
+        self._accepted_amount = 0
+        self._need_accept_amount = 0
         self._dispense_amount(change_amount)
 
     def _after_error(self, error_code, error_text):
@@ -214,14 +225,21 @@ class CashFSM(Machine):
    
     
     def _stop_acceptance_monitor(self):
-        if self._acceptance_monitor_id is None:
-            return
-        self._acceptance_monitor_id.cancel()
+        self._cancel_acceptance_monitor()
         self._acceptance_monitor_id = None
    
     
     def _reset_acceptance_monitor(self):
         if self._acceptance_monitor_id is None:
             return
-        self._acceptance_monitor_id.cancel()
+        self._cancel_acceptance_monitor()
         self._acceptance_monitor_id = reactor.callLater(self.accept_timeout_sec, self.accept_timeout) #@UndefinedVariable
+
+    
+    def _cancel_acceptance_monitor(self):
+        if self._acceptance_monitor_id is None:
+            return
+        try:
+            self._acceptance_monitor_id.cancel()
+        except AlreadyCalled:
+            pass

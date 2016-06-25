@@ -311,7 +311,7 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
 
-        self.check_outputs()
+        self.check_outputs(validator_return_bill_expected_args_list=[()])
 
 
     def test_25_start_accept_on_error(self):

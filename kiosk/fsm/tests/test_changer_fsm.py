@@ -146,7 +146,7 @@ class TestChangerFsm(unittest.TestCase):
     def test_10_start_dispense_on_offline(self):
         self.changer_fsm.start_dispense(amount=20)
         
-        yield self.check_outputs_defer()
+        yield self.check_outputs_defer(fsm_amount_dispensed_expected_args_list=[({'amount': 0,},)])
 
 
     @defer.inlineCallbacks
@@ -272,7 +272,7 @@ class TestChangerFsm(unittest.TestCase):
 
         self.changer_fsm.start_dispense(amount=10)
         
-        yield self.check_outputs_defer()
+        yield self.check_outputs_defer(fsm_amount_dispensed_expected_args_list=[({'amount': 0,},)])
 
 
     @defer.inlineCallbacks
@@ -398,7 +398,7 @@ class TestChangerFsm(unittest.TestCase):
 
         self.changer_fsm.start_dispense(amount=10)
         
-        yield self.check_outputs_defer()
+        yield self.check_outputs_defer(fsm_amount_dispensed_expected_args_list=[({'amount': 0,},)])
 
 
     @defer.inlineCallbacks
@@ -891,7 +891,36 @@ class TestChangerFsm(unittest.TestCase):
         self.changer_fsm.stop_dispense()
             
         yield self.check_outputs_defer(fsm_amount_dispensed_expected_args_list=[({'amount':9,},)])
+
+    #                          68
+    # inputs
+    # fsm.state("OFF",         RDY
+    #          "ON",
+    #          "ERR",
+    #          "RDY",
+    #          "WC",
+    #          "DA")                
+    # start_dispense(0)         +
+    #
+    # outputs
+    # fsm_listener.online       -
+    # fsm_listener.offline      -
+    # fsm_listener.error        -
+    # fsm_listener.ready        -
+    # fsm_listener.coin_in      -
+    # fsm_listener.dispensed    +
+    # changer.start_accept      -
+    # changer.stop_accept       -
+    # changer.dispense_amount   -
+    
+    @defer.inlineCallbacks
+    def test_68_start_zero_dispense_on_ready(self):
+        self.set_fsm_state_initialized()
+
+        self.changer_fsm.start_dispense(amount=0)
         
+        yield self.check_outputs_defer(fsm_amount_dispensed_expected_args_list=[({'amount':0},)])
+    
         
     def set_fsm_state_online(self):
         dispatcher.send_minimal(

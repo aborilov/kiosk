@@ -39,6 +39,7 @@ class TestCashFsm(unittest.TestCase):
         self.validator_fsm.ban_bill = MagicMock()
         self.validator_fsm.permit_bill = MagicMock()
         
+        
         self.cash_fsm = CashFSM(changer_fsm=self.changer_fsm, validator_fsm=self.validator_fsm)
         
         dispatcher.connect(self.fsm_listener.ready, sender=self.cash_fsm, signal='ready')
@@ -853,7 +854,7 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.dispense_change()
         
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
 
 
     def test_69_cash_dispense_all_on_error(self):
@@ -861,7 +862,7 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.dispense_all()
         
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
 
 
     #                            70   71   72   73   74   75   76   77   78   79   80   81   82   83   84   85
@@ -1083,12 +1084,12 @@ class TestCashFsm(unittest.TestCase):
     # fsm_listener.dispensed      -    -    -    -    -    -    -    -    -    -    -    -    -
     # fsm_listener.error          -    -    -    +    -    -    -    -    +    -    -    -    -
     # changer_fsm.start           -    -    -    -    -    -    -    -    -    -    -    -    -
-    # changer_fsm.start_accept    -    -    -    -    -    -    -    -    -    -    -    -    -
+    # changer_fsm.start_accept    -    -    -    -    +    -    -    -    -    -    -    -    -
     # changer_fsm.stop_accept     -    -    -    +    -    -    -    -    +    -    -    -    -
     # changer_fsm.start_dispense  -    -    -    -    -    -    -    -    -    -    -    -    -
     # changer_fsm.stop_dispense   -    -    -    -    -    -    -    -    -    -    -    -    -
     # validator_fsm.start         -    -    -    -    -    -    -    -    -    -    -    -    -
-    # validator_fsm.start_accept  -    -    -    -    -    -    -    -    -    -    -    -    -
+    # validator_fsm.start_accept  -    -    -    -    -    -    -    -    -    +    -    -    -
     # validator_fsm.stop_accept   -    -    -    +    -    -    -    -    +    -    -    -    -
     # validator_fsm.ban_bill      -    -    -    -    -    -    -    -    -    -    -    -    -
     # validator_fsm.permit_bill   -    -    -    -    -    -    -    -    -    -    -    -    -
@@ -1136,7 +1137,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='initialized')
 
-        self.check_outputs()
+        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
 
 
     def test_91_amount_dispensed_on_accept_amount(self):
@@ -1183,7 +1184,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='initialized')
 
-        self.check_outputs()
+        self.check_outputs(validator_fsm_start_accept_expected_args_list=[()])
 
 
     def test_96_cash_accept_on_accept_amount(self):
@@ -1244,7 +1245,7 @@ class TestCashFsm(unittest.TestCase):
     # changer_fsm.start_dispense                  -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # changer_fsm.stop_dispense                   -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # validator_fsm.start                         -    -    -    -    -    -    -    -    -    -    -    -    -    -
-    # validator_fsm.start_accept                  -    -    -    -    -    -    -    -    -    -    -    -    -    -
+    # validator_fsm.start_accept                  -    -    -    -    -    -    -    -    -    -    -    -    -    +
     # validator_fsm.stop_accept                   -    -    +    +    +    +    -    -    +    +    +    +    -    -
     # validator_fsm.ban_bill                      -    -    -    -    -    -    -    -    -    -    -    -    -    +
     # validator_fsm.permit_bill                   -    -    -    -    -    -    -    -    -    -    -    -    +    -
@@ -1452,7 +1453,8 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)],
+                           validator_fsm_start_accept_expected_args_list=[()])
 
 
     #                                            113  114  115  116  117
@@ -2041,9 +2043,11 @@ class TestCashFsm(unittest.TestCase):
         
         
     def set_fsm_state_error(self):
-        self.set_fsm_state_wait_ready()
+        self.set_fsm_state_ready()
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+        self.changer_fsm.stop_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
         
         

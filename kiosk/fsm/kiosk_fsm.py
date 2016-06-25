@@ -23,9 +23,9 @@ class KioskFSM(Machine):
             ['prepared',                 'start_prepare',   'start_dispense',   None,                None,                None,              '_dispense_change'      ],
             ['amount_dispensed',         'start_dispense',  'ready',            None,                None,                None,              '_after_ready'          ],
             
-            ['cash_fsm_error',           'ready',           'error',            None,                None,                None,              '_after_error'          ],
-            ['cash_fsm_error',           'start_sell',      'error',            None,                None,                None,              '_after_error'          ],
-            ['cash_fsm_error',           'start_prepare',   'error',            None,                None,                None,              '_after_error'          ],
+            ['cash_fsm_error',           'ready',           'error',            None,                None,                '_dispense_all',   '_after_error'          ],
+            ['cash_fsm_error',           'start_sell',      'error',            None,                None,                '_dispense_all',   '_after_error'          ],
+            ['cash_fsm_error',           'start_prepare',   'error',            None,                None,                '_dispense_change','_after_error'          ],
             ['cash_fsm_error',           'start_dispense',  'error',            None,                None,                None,              '_after_error'          ],
             
         ]
@@ -75,13 +75,13 @@ class KioskFSM(Machine):
     def _prepare(self, amount=-1):
         self.plc.prepare(self._product)
 
-    def _dispense_all(self):
+    def _dispense_all(self, error_code=0, error_text=''):
         self.cash_fsm.dispense_all()
 
-    def _dispense_change(self):
+    def _dispense_change(self, error_code=0, error_text=''):
         self.cash_fsm.dispense_change()
         
     def _after_error(self, error_code, error_text):
-        self._dispense_all()
+#         self._dispense_all()
         dispatcher.send_minimal(
             sender=self, signal='error', error_code=error_code, error_text=error_text)

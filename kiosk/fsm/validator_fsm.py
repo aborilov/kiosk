@@ -25,6 +25,7 @@ class BillValidatorFSM(Machine):
             ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',   '_fire_bill_in'     ],
             
             ['check_bill',             'ready',           'ready',            None,           None,           '_ban_bill',       None               ],
+            ['check_bill',             'error',           'error',            None,           None,           '_ban_bill',       None               ],
             
             ['error',                  'online',          'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'ready',           'error',            None,           None,            None,            '_after_error'      ],

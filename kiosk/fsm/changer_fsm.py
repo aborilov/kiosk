@@ -25,6 +25,10 @@ class ChangerFSM(Machine):
             ['coin_out',               'dispense_amount', 'ready',           '_is_dispensed', None,           '_remove_amount', '_amount_dispensed' ],
             ['stop_dispense',          'dispense_amount', 'ready',            None,           None,            None,            '_amount_dispensed' ],
             
+            ['start_dispense',         'offline',         'offline',          None,           None,            None,            '_amount_dispensed' ],
+            ['start_dispense',         'online',          'online',           None,           None,            None,            '_amount_dispensed' ],
+            ['start_dispense',         'error',           'error',            None,           None,            None,            '_amount_dispensed' ],
+            
             ['coin_in',                'ready',           'ready',            None,           None,           '_stop_accept',   '_coin_in'          ],
             ['coin_in',                'dispense_amount', 'dispense_amount',  None,           None,           '_stop_accept',   '_coin_in'          ],
             
@@ -99,6 +103,7 @@ class ChangerFSM(Machine):
     def _dispense_amount_impl(self, amount):
         if amount <= 0:
             self.stop_dispense()
+            return
         self.changer.dispense_amount(amount)
 
     def _remove_amount(self, amount):

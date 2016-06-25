@@ -653,8 +653,8 @@ class TestKioskFsm(unittest.TestCase):
     # fsm_listener.error          -    -    +    -    -    -    -    -    -    -
     # cash_fsm.start              -    -    -    -    -    -    -    -    -    -
     # cash_fsm.accept             -    -    -    -    -    -    -    -    -    -
-    # cash_fsm.dispense_all       -    -    +    -    -    -    -    +    -    -
-    # cash_fsm.dispense_change    -    -    -    -    -    -    +    -    -    -
+    # cash_fsm.dispense_all       -    -    -    -    -    -    -    +    -    -
+    # cash_fsm.dispense_change    -    -    +    -    -    -    +    -    -    -
     # plc.prepare                 -    -    -    -    -    -    -    -    -    -
 
 
@@ -682,7 +682,7 @@ class TestKioskFsm(unittest.TestCase):
             sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
 
         self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           cash_fsm_dispense_all_expected_args_list=[()])
+                           cash_fsm_dispense_change_expected_args_list=[()])
 
 
     def test_55_not_accepted_on_start_prepare(self):
@@ -772,7 +772,7 @@ class TestKioskFsm(unittest.TestCase):
     # fsm_listener.error          -    -    +    -    -    -    -    -    -    -
     # cash_fsm.start              -    -    -    -    -    -    -    -    -    -
     # cash_fsm.accept             -    -    -    -    -    -    -    -    -    -
-    # cash_fsm.dispense_all       -    -    +    -    -    -    -    -    -    -
+    # cash_fsm.dispense_all       -    -    -    -    -    -    -    -    -    -
     # cash_fsm.dispense_change    -    -    -    -    -    -    -    -    -    -
     # plc.prepare                 -    -    -    -    -    -    -    -    -    -
 
@@ -800,8 +800,7 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           cash_fsm_dispense_all_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)])
 
 
     def test_65_not_accepted_on_start_dispense(self):
