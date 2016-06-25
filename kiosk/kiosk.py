@@ -16,7 +16,10 @@ from transitions import logger as tr_logger
 from twisted.internet import reactor, defer
 from twisted.internet.serialport import SerialPort
 
-from ..fsm.changer_fsm import ChangerWrapper, ChangerFSM
+from fsm.changer_fsm import ChangerFSM
+from fsm.cash_fsm import CashFSM
+from fsm.validator_fsm import BillValidatorFSM
+from fsm.kiosk_fsm import KioskFSM
 
 
 plugin.install_plugin(plugin.TwistedDispatchPlugin())
@@ -182,36 +185,36 @@ class Kiosk2(Machine):
 #         self.dispense(coin=1, count=10)
 #         self.dispense(coin=2, count=10)
 #         self.dispense(coin=4, count=10)
+# 
+# class RUChangerFSM(ChangerFSM):
+# 
+#     def __init__(self, changer, amount=30):
+#         super(RUChangerFSM, self).__init__(changer)
+#         self.amount = amount
+#         
+#     def check_coin(self, amount):
+#         accepted_amount = self._accepted_amount
+#         need_amount = self.amount
+#         if accepted_amount >= need_amount:
+#             self.invalid_coin(amount)
+#         elif accepted_amount + amount >= need_amount:
+#             self.valid_coin(amount)
+#             self.stop_accept()
+#             self.dispense_amount(accepted_amount+amount-need_amount)
+#         elif not self.can_dispense_amount(accepted_amount + amount):
+#             self.invalid_coin(amount)
+#         else:
+#             self.valid_coin(amount)
 
-class RUChangerFSM(ChangerFSM):
 
-    def __init__(self, changer, amount=30):
-        super(RUChangerFSM, self).__init__(changer)
-        self.amount = amount
-        
-    def check_coin(self, amount):
-        accepted_amount = self._accepted_amount
-        need_amount = self.amount
-        if accepted_amount >= need_amount:
-            self.invalid_coin(amount)
-        elif accepted_amount + amount >= need_amount:
-            self.valid_coin(amount)
-            self.stop_accept()
-            self.dispense_amount(accepted_amount+amount-need_amount)
-        elif not self.can_dispense_amount(accepted_amount + amount):
-            self.invalid_coin(amount)
-        else:
-            self.valid_coin(amount)
+COINS = {
+    0: 1,
+    1: 2,
+    2: 5,
+    4: 10
+}
 
-
-class RUChanger(ChangerWrapper):
-
-    COINS = {
-        0: 1,
-        1: 2,
-        2: 5,
-        4: 10
-    }
+class RUChanger(Changer):
 
     def __init__(self, proto):
         super(RUChanger, self).__init__(proto, COINS)
@@ -224,10 +227,17 @@ class RUChanger(ChangerWrapper):
         self.dispense(coin=4, count=10)
 
 
+
+BILLS = {
+    0: 10,
+    1: 50,
+    2: 100
+}
+
 class RUBillValidator(BillValidator):
 
     def __init__(self, proto):
-        super(RUBillValidator, self).__init__(proto)
+        super(RUBillValidator, self).__init__(proto, BILLS)
 
     def start_accept(self):
         return self.bill_type(bills='\xFF\xFF\xFF\xFF')
@@ -236,24 +246,89 @@ class RUBillValidator(BillValidator):
         return self.bill_type(bills='\x00\x00\x00\x00')
 
 
+class Plc(object):
+    
+    def __init__(self):
+        self.prepare_time_sec = 1
+        self.prepare_success = True
+        
+    def prepare(self, product):
+        print('prepare'.format(product))
+        if self.prepare_success:
+            reactor.callLater(self.prepare_time_sec, self.fire_prepared)
+        else:
+            reactor.callLater(self.prepare_time_sec, self.fire_not_prepared)
+        
+    def fire_prepared(self):
+        dispatcher.send_minimal(
+            sender=self, signal='prepared')
+        
+    def fire_not_prepared(self):
+        dispatcher.send_minimal(
+            sender=self, signal='not_prepared')
+
+
+class ValidatorStub():
+    def start_accept(self):
+        pass
+
+    def stop_accept(self):
+        pass
+
+    def start_device(self):
+        pass
+
+    def stop_device(self):
+        pass
+
+    def stack_bill(self):
+        pass
+
+    def return_bill(self):
+        pass
+    
+    def initialize(self):
+        dispatcher.send_minimal(
+            sender=self, signal='online')
+        dispatcher.send_minimal(
+            sender=self, signal='initialized')
+
 
 if __name__ == '__main__':
+    
+    PRODUCTS = {
+        1: 10,
+        2: 100
+        }
+    
     proto = MDB()
     SerialPort(
         #  proto, '/dev/ttyUSB0', reactor,
         proto, '/dev/ttyMDB', reactor,
         baudrate='38400', parity=PARITY_NONE,
         bytesize=EIGHTBITS, stopbits=STOPBITS_ONE)
-    changer = RUChanger(proto)
-    changerFsm = RUChangerFSM(changer=changer)
+    changer = RUChanger(proto=proto)
+    
+#     validator = RUBillValidator(proto=proto)
+    validator = ValidatorStub()
+    
+    plc = Plc()
+    changer_fsm = ChangerFSM(changer=changer)
+    validator_fsm = BillValidatorFSM(validator=validator)
+    cash_fsm = CashFSM(changer_fsm=changer_fsm, validator_fsm=validator_fsm)
+    kiosk_fsm = KioskFSM(plc, cash_fsm=cash_fsm, products=PRODUCTS)
+    
+    reactor.callLater(0, kiosk_fsm.start)
+    reactor.callLater(0.2, validator.initialize)
+    reactor.callLater(5, kiosk_fsm.sell, product=1)
         
     #validator = RUBillValidator(proto)
     #kiosk = Kiosk2(changer)
     
     #reactor.callLater(0, proto.mdb_init)
     
-    reactor.callLater(0, changerFsm.start)
-    reactor.callLater(5, changerFsm.start_accept)
+#     reactor.callLater(0, changerFsm.start)
+#     reactor.callLater(5, changerFsm.start_accept)
     #reactor.callLater(3, changerFsm.dispense_amount, 100)
     #reactor.callLater(10, changerFsm.stop)
 
