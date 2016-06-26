@@ -718,7 +718,7 @@ class TestCashFsm(unittest.TestCase):
     # changer_fsm.start           -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # changer_fsm.start_accept    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # changer_fsm.stop_accept     -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-    # changer_fsm.start_dispense  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+    # changer_fsm.start_dispense  -    -    -    -    -    -    -    -    -    -    -    -    -    -    +    +
     # changer_fsm.stop_dispense   -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # validator_fsm.start         -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # validator_fsm.start_accept  -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
@@ -850,19 +850,37 @@ class TestCashFsm(unittest.TestCase):
 
 
     def test_68_cash_dispense_change_on_error(self):
-        self.set_fsm_state_error()
+        self.set_fsm_state_wait_dispense(10)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=1)
+        self.fsm_listener.accepted.reset_mock()
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+        self.changer_fsm.stop_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
+        self.fsm_listener.error.reset_mock()
         
         self.cash_fsm.dispense_change()
-        
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
+         
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((1,),)])
 
 
     def test_69_cash_dispense_all_on_error(self):
-        self.set_fsm_state_error()
+        self.set_fsm_state_wait_dispense(10)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=1)
+        self.fsm_listener.accepted.reset_mock()
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+        self.changer_fsm.stop_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
+        self.fsm_listener.error.reset_mock()
         
         self.cash_fsm.dispense_all()
-        
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
+         
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((11,),)])
 
 
     #                            70   71   72   73   74   75   76   77   78   79   80   81   82   83   84   85
@@ -1820,10 +1838,10 @@ class TestCashFsm(unittest.TestCase):
     # dispense_all                                                                                           +
     #
     # outputs
-    # fsm_listener.ready          -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
+    # fsm_listener.ready          -    -    +    -    -    -    -    -    -    -    -    -    -    -    -    -
     # fsm_listener.accepted       -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # fsm_listener.not_accepted   -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
-    # fsm_listener.dispensed      -    -    -    -    -    -    +    -    -    -    -    -    -    -    -    -
+    # fsm_listener.dispensed      -    -    +    -    -    -    +    -    -    -    -    -    -    -    -    -
     # fsm_listener.error          -    -    -    +    -    -    -    -    -    +    -    -    -    -    -    -
     # changer_fsm.start           -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
     # changer_fsm.start_accept    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -    -
@@ -1860,7 +1878,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='offline')
  
-        self.check_outputs()
+        self.check_outputs(fsm_dispensed_expected_args_list=[({'amount':0,},)])
  
  
     def test_137_changer_error_on_start_dispense(self):
@@ -2034,6 +2052,44 @@ class TestCashFsm(unittest.TestCase):
             changer_fsm_stop_accept_expected_args_list=[()],
             validator_fsm_stop_accept_expected_args_list=[()],
             changer_fsm_start_dispense_expected_args_list=[((9,),)])
+
+
+    def test_151_double_cash_dispense_change_on_error(self):
+        self.set_fsm_state_wait_dispense(10)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=1)
+        self.fsm_listener.accepted.reset_mock()
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+        self.changer_fsm.stop_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
+        self.fsm_listener.error.reset_mock()
+        
+        self.cash_fsm.dispense_change()
+        self.changer_fsm.start_dispense.reset_mock()
+        self.cash_fsm.dispense_change()
+         
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
+
+
+    def test_152_double_cash_dispense_all_on_error(self):
+        self.set_fsm_state_wait_dispense(10)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=1)
+        self.fsm_listener.accepted.reset_mock()
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+        self.changer_fsm.stop_accept.reset_mock()
+        self.validator_fsm.stop_accept.reset_mock()
+        self.fsm_listener.error.reset_mock()
+        
+        self.cash_fsm.dispense_all()
+        self.changer_fsm.start_dispense.reset_mock()
+        self.cash_fsm.dispense_all()
+         
+        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
 
 
     def set_fsm_state_wait_ready(self):

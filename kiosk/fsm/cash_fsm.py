@@ -41,6 +41,7 @@ class CashFSM(Machine):
             ['dispense_all',             'wait_dispense',   'start_dispense',   None,            None,               None,                '_dispense_all'         ],
             ['dispense_change',          'wait_dispense',   'start_dispense',   None,            None,               None,                '_dispense_change'      ],
             ['amount_dispensed',         'start_dispense',  'ready',            None,            None,               None,                '_amount_dispensed'     ],
+            ['changer_offline',          'start_dispense',  'ready',            None,            None,               None,                '_amount_dispensed'     ],
             
             ['check_bill',               'init',            'init',             None,            None,              '_ban_bill',          None                    ],
             ['check_bill',               'wait_ready',      'wait_ready',       None,            None,              '_ban_bill',          None                    ],
@@ -108,6 +109,7 @@ class CashFSM(Machine):
     
     def _on_changer_offline(self):
         self.changer_state = DEVICE_STATE_OFFLINE
+        self.changer_offline()
 
     def _on_changer_error(self, error_code, error_text):
         self.changer_state = DEVICE_STATE_ERROR
