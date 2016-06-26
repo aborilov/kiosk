@@ -6,12 +6,12 @@ from louie import dispatcher
 from transitions import Machine
 
 
-logger = logging.getLogger('pymdb')
+logger = logging.getLogger('kiosk')
 
 class BillValidatorFSM(Machine):
 
     def __init__(self, validator):
-        
+
         states = ["offline", "online", "error", "ready",
                   "wait_bill", "bill_confirm"]
         transitions = [
@@ -23,10 +23,10 @@ class BillValidatorFSM(Machine):
             ['stop_accept',            'wait_bill',       'ready',            None,           None,            None,             None               ],
             ['ban_bill',               'bill_confirm',    'ready',            None,           None,           '_ban_bill',       None               ],
             ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',   '_fire_bill_in'     ],
-            
+
             ['check_bill',             'ready',           'ready',            None,           None,           '_ban_bill',       None               ],
             ['check_bill',             'error',           'error',            None,           None,           '_ban_bill',       None               ],
-            
+
             ['error',                  'online',          'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'ready',           'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'wait_bill',       'error',            None,           None,            None,            '_after_error'      ],
@@ -45,9 +45,9 @@ class BillValidatorFSM(Machine):
         dispatcher.connect(self.error, sender=validator, signal='error')
         dispatcher.connect(self.offline, sender=validator, signal='offline')
         dispatcher.connect(self.check_bill, sender=validator, signal='check_bill')
-        
+
         self._accepted_amount = 0
-        
+
     def start(self):
         self.validator.start_device()
 
@@ -85,7 +85,7 @@ class BillValidatorFSM(Machine):
     def _stop_accept(self):
         logger.debug("_stop_accept")
         self.validator.stop_accept()
-        
+
 
     def _ban_bill(self, amount=0):
         #TODO wait until bill returned. Maybe need to add a new FSM state return_bill

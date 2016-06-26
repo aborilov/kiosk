@@ -5,12 +5,12 @@ from transitions import Machine
 from twisted.internet import reactor
 
 
-logger = logging.getLogger('pymdb')
+logger = logging.getLogger('kiosk')
 
 class ChangerFSM(Machine):
 
     def __init__(self, changer):
-        
+
         states = ["offline", "online", "error", "ready",
                   "wait_coin", "dispense_amount"]
         transitions = [
@@ -21,17 +21,18 @@ class ChangerFSM(Machine):
             ['start_dispense',         'ready',           'dispense_amount',  None,           None,            None,            '_start_dispense'   ],
             ['coin_in',                'wait_coin',       'ready',            None,           None,           '_stop_accept',   '_coin_in'          ],
             ['stop_accept',            'wait_coin',       'ready',            None,           None,           '_stop_accept',    None               ],
+            ['start_dispense',         'wait_coin',       'wait_coin',        None,           None,           '_start_dispense', None               ],
             ['coin_out',               'dispense_amount', 'dispense_amount',  None,          '_is_dispensed', '_remove_amount',  None               ],
             ['coin_out',               'dispense_amount', 'ready',           '_is_dispensed', None,           '_remove_amount', '_amount_dispensed' ],
             ['stop_dispense',          'dispense_amount', 'ready',            None,           None,            None,            '_amount_dispensed' ],
-            
+
             ['start_dispense',         'offline',         'offline',          None,           None,            None,            '_amount_dispensed' ],
             ['start_dispense',         'online',          'online',           None,           None,            None,            '_amount_dispensed' ],
             ['start_dispense',         'error',           'error',            None,           None,            None,            '_amount_dispensed' ],
-            
+
             ['coin_in',                'ready',           'ready',            None,           None,           '_stop_accept',   '_coin_in'          ],
             ['coin_in',                'dispense_amount', 'dispense_amount',  None,           None,           '_stop_accept',   '_coin_in'          ],
-            
+
             ['error',                  'online',          'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'ready',           'error',            None,           None,            None,            '_after_error'      ],
             ['error',                  'wait_coin',       'error',            None,           None,            None,            '_after_error'      ],
@@ -41,7 +42,7 @@ class ChangerFSM(Machine):
             ['offline',                'error',           'offline',          None,           None,            None,            '_after_offline'    ],
             ['offline',                'wait_coin',       'offline',          None,           None,            None,            '_after_offline'    ],
             ['offline',                'dispense_amount', 'offline',          None,           None,            None,            '_after_offline'    ],
-            
+
         ]
         super(ChangerFSM, self).__init__(
             states=states, transitions=transitions, initial='offline', ignore_invalid_triggers=True)
@@ -52,18 +53,18 @@ class ChangerFSM(Machine):
         dispatcher.connect(self.offline, sender=changer, signal='offline')
         dispatcher.connect(self.coin_in, sender=changer, signal='coin_in')
         dispatcher.connect(self.coin_out, sender=changer, signal='coin_out')
-        
+
         # init parameters
         self._dispensed_amount = 0
         self._need_dispense_amount = 0
-    
+
     def start(self):
         self.changer.start_device()
 
     def stop(self):
         # TODO reset machine
         self.changer.stop_device()
-    
+
     def _after_online(self):
         dispatcher.send_minimal(
             sender=self, signal='online')
@@ -99,7 +100,7 @@ class ChangerFSM(Machine):
         self._need_dispense_amount = amount
         self._dispensed_amount = 0
         reactor.callLater(0, self._dispense_amount_impl, amount=amount)#@UndefinedVariable
- 
+
     def _dispense_amount_impl(self, amount):
         if amount <= 0:
             self.stop_dispense()
