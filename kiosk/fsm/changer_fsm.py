@@ -45,10 +45,14 @@ class ChangerFSM(Machine):
 
         ]
         super(ChangerFSM, self).__init__(
-            states=states, transitions=transitions, initial='offline', ignore_invalid_triggers=True)
+            states=states, 
+            transitions=transitions, 
+            initial='offline', 
+            ignore_invalid_triggers=True)
         self.changer = changer
         dispatcher.connect(self.online, sender=changer, signal='online')
-        dispatcher.connect(self.initialized, sender=changer, signal='initialized')
+        dispatcher.connect(self.initialized, 
+                           sender=changer, signal='initialized')
         dispatcher.connect(self.error, sender=changer, signal='error')
         dispatcher.connect(self.offline, sender=changer, signal='offline')
         dispatcher.connect(self.coin_in, sender=changer, signal='coin_in')
@@ -80,11 +84,13 @@ class ChangerFSM(Machine):
     def _after_error(self, error_code, error_text):
         self._stop_accept()
         dispatcher.send_minimal(
-            sender=self, signal='error', error_code=error_code, error_text=error_text)
+            sender=self, signal='error', 
+            error_code=error_code, error_text=error_text)
 
     def _amount_dispensed(self, amount=0):
         dispatcher.send_minimal(
-            sender=self, signal='amount_dispensed', amount=self._dispensed_amount)
+            sender=self, signal='amount_dispensed', 
+            amount=self._dispensed_amount)
 
     def _coin_in(self, amount):
         dispatcher.send_minimal(

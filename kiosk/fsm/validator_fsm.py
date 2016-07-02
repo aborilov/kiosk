@@ -38,13 +38,18 @@ class BillValidatorFSM(Machine):
             ['offline',                'bill_confirm',    'offline',          None,           None,            None,            '_after_offline'    ],
         ]
         super(BillValidatorFSM, self).__init__(
-            states=states, transitions=transitions, initial='offline', ignore_invalid_triggers=True)
+            states=states, 
+            transitions=transitions, 
+            initial='offline', 
+            ignore_invalid_triggers=True)
         self.validator = validator
         dispatcher.connect(self.online, sender=validator, signal='online')
-        dispatcher.connect(self.initialized, sender=validator, signal='initialized')
+        dispatcher.connect(self.initialized, 
+                           sender=validator, signal='initialized')
         dispatcher.connect(self.error, sender=validator, signal='error')
         dispatcher.connect(self.offline, sender=validator, signal='offline')
-        dispatcher.connect(self.check_bill, sender=validator, signal='check_bill')
+        dispatcher.connect(self.check_bill, 
+                           sender=validator, signal='check_bill')
 
         self._accepted_amount = 0
 
@@ -71,7 +76,8 @@ class BillValidatorFSM(Machine):
         self._stop_accept()
         self.validator.return_bill()
         dispatcher.send_minimal(
-            sender=self, signal='error', error_code=error_code, error_text=error_text)
+            sender=self, signal='error', 
+            error_code=error_code, error_text=error_text)
 
     def _check_bill(self, amount):
         self._accepted_amount = amount
@@ -88,11 +94,13 @@ class BillValidatorFSM(Machine):
 
 
     def _ban_bill(self, amount=0):
-        #TODO wait until bill returned. Maybe need to add a new FSM state return_bill
+        #TODO wait until bill returned. 
+        #Maybe need to add a new FSM state return_bill
         self.validator.return_bill()
 
     def _permit_bill(self, amount=0):
-        #TODO wait until bill accepted. Maybe need to add a new FSM state accept_bill
+        #TODO wait until bill accepted. 
+        #Maybe need to add a new FSM state accept_bill
         self.validator.stack_bill()
 
 

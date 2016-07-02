@@ -32,12 +32,18 @@ class TestValidatorFsm(TestCase):
         
         self.validator_fsm = BillValidatorFSM(validator=self.validator)
         
-        dispatcher.connect(self.fsm_listener.online, sender=self.validator_fsm, signal='online')
-        dispatcher.connect(self.fsm_listener.offline, sender=self.validator_fsm, signal='offline')
-        dispatcher.connect(self.fsm_listener.initialized, sender=self.validator_fsm, signal='initialized')
-        dispatcher.connect(self.fsm_listener.error, sender=self.validator_fsm, signal='error')
-        dispatcher.connect(self.fsm_listener.bill_in, sender=self.validator_fsm, signal='bill_in')
-        dispatcher.connect(self.fsm_listener.check_bill, sender=self.validator_fsm, signal='check_bill')
+        dispatcher.connect(self.fsm_listener.online, 
+                           sender=self.validator_fsm, signal='online')
+        dispatcher.connect(self.fsm_listener.offline, 
+                           sender=self.validator_fsm, signal='offline')
+        dispatcher.connect(self.fsm_listener.initialized, 
+                           sender=self.validator_fsm, signal='initialized')
+        dispatcher.connect(self.fsm_listener.error, 
+                           sender=self.validator_fsm, signal='error')
+        dispatcher.connect(self.fsm_listener.bill_in, 
+                           sender=self.validator_fsm, signal='bill_in')
+        dispatcher.connect(self.fsm_listener.check_bill, 
+                           sender=self.validator_fsm, signal='check_bill')
 
 
     def tearDown(self):
@@ -84,7 +90,7 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='online')
 
-        self.check_outputs(fsm_online_expected_args_list=[()])
+        self.check_outputs(fsm_online_expected=[()])
 
 
     def test_3_validator_offline_on_offline(self):
@@ -96,7 +102,8 @@ class TestValidatorFsm(TestCase):
 
     def test_4_validator_error_on_offline(self):
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text="error_12")
+            sender=self.validator, 
+            signal='error', error_code=12, error_text="error_12")
 
         self.check_outputs()
 
@@ -184,18 +191,20 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
 
-        self.check_outputs(fsm_offline_expected_args_list=[()])
+        self.check_outputs(fsm_offline_expected=[()])
 
 
     def test_13_validator_error_on_online(self):
         self.set_fsm_state_online()
         
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator, 
+            signal='error', error_code=12, error_text='error_12')
         
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()],
-                           validator_return_bill_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           validator_stop_accept_expected=[()],
+                           validator_return_bill_expected=[()])
 
 
     def test_14_validator_initialized_on_online(self):
@@ -204,8 +213,8 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='initialized')
         
-        self.check_outputs(fsm_initialized_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(fsm_initialized_expected=[()],
+                           validator_start_accept_expected=[()])
 
 
     def test_15_check_bill_on_online(self):
@@ -284,14 +293,15 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
 
-        self.check_outputs(fsm_offline_expected_args_list=[()])
+        self.check_outputs(fsm_offline_expected=[()])
 
 
     def test_22_validator_error_on_error(self):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text="error_12")
+            sender=self.validator, 
+            signal='error', error_code=12, error_text="error_12")
 
         self.check_outputs()
 
@@ -311,7 +321,7 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
 
-        self.check_outputs(validator_return_bill_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()])
 
 
     def test_25_start_accept_on_error(self):
@@ -392,18 +402,20 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
 
-        self.check_outputs(fsm_offline_expected_args_list=[()])
+        self.check_outputs(fsm_offline_expected=[()])
 
 
     def test_31_validator_error_on_ready(self):
         self.set_fsm_state_initialized()
 
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator, 
+            signal='error', error_code=12, error_text='error_12')
         
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()],
-                           validator_return_bill_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           validator_stop_accept_expected=[()],
+                           validator_return_bill_expected=[()])
 
 
     def test_32_validator_initialized_on_ready(self):
@@ -421,7 +433,7 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
         
-        self.check_outputs(validator_return_bill_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()])
 
 
     def test_34_start_accept_on_ready(self):
@@ -429,7 +441,7 @@ class TestValidatorFsm(TestCase):
 
         self.validator_fsm.start_accept()
         
-        self.check_outputs(validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_start_accept_expected=[()])
 
 
     def test_35_stop_accept_on_ready(self):
@@ -502,18 +514,20 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
 
-        self.check_outputs(fsm_offline_expected_args_list=[()])
+        self.check_outputs(fsm_offline_expected=[()])
 
 
     def test_40_validator_error_on_wait_bill(self):
         self.set_fsm_state_wait_bill()
 
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator, 
+            signal='error', error_code=12, error_text='error_12')
         
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()],
-                           validator_return_bill_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           validator_stop_accept_expected=[()],
+                           validator_return_bill_expected=[()])
 
 
     def test_41_validator_initialized_on_wait_bill(self):
@@ -531,7 +545,7 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=1)
 
-        self.check_outputs(fsm_check_bill_expected_args_list=[({'amount':1,},)])
+        self.check_outputs(fsm_check_bill_expected=[({'amount':1,},)])
 
 
     def test_43_start_accept_on_wait_bill(self):
@@ -612,18 +626,20 @@ class TestValidatorFsm(TestCase):
         dispatcher.send_minimal(
             sender=self.validator, signal='offline')
 
-        self.check_outputs(fsm_offline_expected_args_list=[()])
+        self.check_outputs(fsm_offline_expected=[()])
 
 
     def test_49_validator_error_on_bill_confirm(self):
         self.set_fsm_state_bill_confirm()
 
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator, 
+            signal='error', error_code=12, error_text='error_12')
         
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           validator_stop_accept_expected_args_list=[()],
-                           validator_return_bill_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           validator_stop_accept_expected=[()],
+                           validator_return_bill_expected=[()])
 
 
     def test_50_validator_initialized_on_bill_confirm(self):
@@ -665,7 +681,7 @@ class TestValidatorFsm(TestCase):
         
         self.validator_fsm.ban_bill()
 
-        self.check_outputs(validator_return_bill_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()])
 
 
 
@@ -677,8 +693,8 @@ class TestValidatorFsm(TestCase):
         
         yield self.sleep_defer(sleep_sec=0.5)
 
-        self.check_outputs(fsm_bill_in_expected_args_list=[({'amount':10,},)],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(fsm_bill_in_expected=[({'amount':10,},)],
+                           validator_stack_bill_expected=[()])
 
 
     def set_fsm_state_online(self):
@@ -690,7 +706,8 @@ class TestValidatorFsm(TestCase):
     def set_fsm_state_error(self):
         self.set_fsm_state_online()
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code='12', error_text='error_12')
+            sender=self.validator, 
+            signal='error', error_code='12', error_text='error_12')
         self.fsm_listener.error.reset_mock()
         self.validator.stop_accept.reset_mock()
         self.validator.return_bill.reset_mock()
@@ -718,26 +735,36 @@ class TestValidatorFsm(TestCase):
 
 
     def check_outputs(self,
-                      fsm_online_expected_args_list=[],
-                      fsm_offline_expected_args_list=[],
-                      fsm_error_expected_args_list=[],
-                      fsm_initialized_expected_args_list=[],
-                      fsm_bill_in_expected_args_list=[],
-                      fsm_check_bill_expected_args_list=[],
-                      validator_start_accept_expected_args_list=[],
-                      validator_stop_accept_expected_args_list=[],
-                      validator_stack_bill_expected_args_list=[],
-                      validator_return_bill_expected_args_list=[]):
-        self.assertEquals(fsm_online_expected_args_list, self.fsm_listener.online.call_args_list)
-        self.assertEquals(fsm_offline_expected_args_list, self.fsm_listener.offline.call_args_list)
-        self.assertEquals(fsm_error_expected_args_list, self.fsm_listener.error.call_args_list)
-        self.assertEquals(fsm_initialized_expected_args_list, self.fsm_listener.initialized.call_args_list)
-        self.assertEquals(fsm_bill_in_expected_args_list, self.fsm_listener.bill_in.call_args_list)
-        self.assertEquals(fsm_check_bill_expected_args_list, self.fsm_listener.check_bill.call_args_list)
-        self.assertEquals(validator_start_accept_expected_args_list, self.validator.start_accept.call_args_list)
-        self.assertEquals(validator_stop_accept_expected_args_list, self.validator.stop_accept.call_args_list)
-        self.assertEquals(validator_stack_bill_expected_args_list, self.validator.stack_bill.call_args_list)
-        self.assertEquals(validator_return_bill_expected_args_list, self.validator.return_bill.call_args_list)
+                      fsm_online_expected=[],
+                      fsm_offline_expected=[],
+                      fsm_error_expected=[],
+                      fsm_initialized_expected=[],
+                      fsm_bill_in_expected=[],
+                      fsm_check_bill_expected=[],
+                      validator_start_accept_expected=[],
+                      validator_stop_accept_expected=[],
+                      validator_stack_bill_expected=[],
+                      validator_return_bill_expected=[]):
+        self.assertEquals(fsm_online_expected, 
+                          self.fsm_listener.online.call_args_list)
+        self.assertEquals(fsm_offline_expected, 
+                          self.fsm_listener.offline.call_args_list)
+        self.assertEquals(fsm_error_expected, 
+                          self.fsm_listener.error.call_args_list)
+        self.assertEquals(fsm_initialized_expected, 
+                          self.fsm_listener.initialized.call_args_list)
+        self.assertEquals(fsm_bill_in_expected, 
+                          self.fsm_listener.bill_in.call_args_list)
+        self.assertEquals(fsm_check_bill_expected, 
+                          self.fsm_listener.check_bill.call_args_list)
+        self.assertEquals(validator_start_accept_expected, 
+                          self.validator.start_accept.call_args_list)
+        self.assertEquals(validator_stop_accept_expected, 
+                          self.validator.stop_accept.call_args_list)
+        self.assertEquals(validator_stack_bill_expected, 
+                          self.validator.stack_bill.call_args_list)
+        self.assertEquals(validator_return_bill_expected, 
+                          self.validator.return_bill.call_args_list)
 
 
     def sleep_defer(self, sleep_sec):

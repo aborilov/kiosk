@@ -54,12 +54,17 @@ class TestKioskFsm(unittest.TestCase):
         
         self.changer_fsm = ChangerFSM(changer=self.changer)
         self.validator_fsm = BillValidatorFSM(validator=self.validator)
-        self.cash_fsm = CashFSM(changer_fsm=self.changer_fsm, validator_fsm=self.validator_fsm)
-        self.kiosk_fsm = KioskFSM(cash_fsm=self.cash_fsm, plc=self.plc, products=PRODUCTS)
+        self.cash_fsm = CashFSM(changer_fsm=self.changer_fsm, 
+                                validator_fsm=self.validator_fsm)
+        self.kiosk_fsm = KioskFSM(cash_fsm=self.cash_fsm, plc=self.plc, 
+                                  products=PRODUCTS)
         
-        dispatcher.connect(self.fsm_listener.ready, sender=self.kiosk_fsm, signal='ready')
-        dispatcher.connect(self.fsm_listener.reset_sell, sender=self.kiosk_fsm, signal='reset_sell')
-        dispatcher.connect(self.fsm_listener.error, sender=self.kiosk_fsm, signal='error')
+        dispatcher.connect(self.fsm_listener.ready, 
+                           sender=self.kiosk_fsm, signal='ready')
+        dispatcher.connect(self.fsm_listener.reset_sell, 
+                           sender=self.kiosk_fsm, signal='reset_sell')
+        dispatcher.connect(self.fsm_listener.error, 
+                           sender=self.kiosk_fsm, signal='error')
 
         self.kiosk_fsm.start()
         
@@ -70,8 +75,8 @@ class TestKioskFsm(unittest.TestCase):
 
     def test_ready_state(self):
         self.set_kiosk_ready_state()
-        self.check_outputs(fsm_ready_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()],
+                           validator_start_accept_expected=[()])
 
 
     def test_select_product(self):
@@ -79,8 +84,8 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         self.kiosk_fsm.sell(product=PRODUCT_1)
-        self.check_outputs(changer_start_accept_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_start_accept_expected=[()],
+                           validator_start_accept_expected=[()])
         
     
     @defer.inlineCallbacks
@@ -102,13 +107,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-6)
-        self.check_outputs(changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         self.accept_coin_amount(6)
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #4
@@ -116,7 +121,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -139,15 +144,15 @@ class TestKioskFsm(unittest.TestCase):
         #3
         self.accept_bill_amount(PRODUCTS[product]-6)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(validator_start_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(validator_start_accept_expected=[()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         self.accept_bill_amount(6)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -155,7 +160,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         
 
     @defer.inlineCallbacks
@@ -177,15 +182,15 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-6)
-        self.check_outputs(changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         self.accept_bill_amount(6)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -193,7 +198,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -219,8 +224,8 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         self.accept_coin_amount(7)
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #4
@@ -228,12 +233,12 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -261,9 +266,9 @@ class TestKioskFsm(unittest.TestCase):
         
         self.accept_bill_amount(7)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -271,12 +276,12 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
         
 
@@ -304,9 +309,9 @@ class TestKioskFsm(unittest.TestCase):
 
         self.accept_bill_amount(7)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -314,12 +319,12 @@ class TestKioskFsm(unittest.TestCase):
         
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -352,11 +357,11 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.5)
         
         #5
-        self.check_outputs(changer_start_accept_expected_args_list=[()],
-                           fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-1,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(changer_start_accept_expected=[()],
+               fsm_reset_sell_expected=[()],
+               changer_stop_accept_expected=[(), ()],
+               changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)],
+               fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -390,12 +395,12 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.5)
         
         #5
-        self.check_outputs(validator_start_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()],
-                           fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-1,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(validator_start_accept_expected=[()],
+                   validator_stack_bill_expected=[()],
+                   fsm_reset_sell_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)],
+                   fsm_ready_expected=[()])
         
 
     @defer.inlineCallbacks
@@ -428,12 +433,12 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.5)
         
         #5
-        self.check_outputs(validator_start_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()],
-                           fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-1,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(validator_start_accept_expected=[()],
+                   validator_stack_bill_expected=[()],
+                   fsm_reset_sell_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)],
+                   fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -469,18 +474,18 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #6
         yield self.sleep_defer(sleep_sec=0.5)
         
         #7, 8
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-6,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-6,),)],
+                   fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -518,18 +523,18 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #6
         yield self.sleep_defer(sleep_sec=0.5)
         
         #7, 8
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-6,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-6,),)],
+                   fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -566,18 +571,18 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #6
         yield self.sleep_defer(sleep_sec=0.5)
         
         #7, 8
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-6,),)],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-6,),)],
+                   fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -606,17 +611,17 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         
         #4
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #5
         yield self.sleep_defer(sleep_sec=0.5)
         
         #6
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           changer_stop_accept_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -646,8 +651,8 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         
         #4
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
 
         #5
@@ -655,10 +660,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-1)
         self.accept_bill_amount(1)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           plc_prepare_expected=[((PRODUCT_1,),)],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
 
         #6
@@ -666,7 +671,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #7
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -682,11 +687,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #2
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
         
         #3
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #4
@@ -706,11 +714,15 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #2
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
         
         #3
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #4
@@ -730,11 +742,16 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #2
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
         
         #3
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(
+               fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+               changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #4
@@ -754,11 +771,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #2
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
         
         #3
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #4
@@ -784,11 +804,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
         
         #4
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #5
@@ -814,11 +837,15 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
         
         #4
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #5
@@ -844,11 +871,15 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
         
         #4
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #5
@@ -874,11 +905,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
         
         #4
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #5
@@ -911,11 +945,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
         
         #5, 6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -948,11 +985,14 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
         
         #5, 6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -986,12 +1026,16 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
         
         #5, 6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-1,),)])
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
         self.reset_outputs()
         
         #7
@@ -1025,12 +1069,16 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
         
         #5, 6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((PRODUCTS[product]-1,),)])
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
         self.reset_outputs()
         
         #7
@@ -1062,21 +1110,24 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1108,21 +1159,25 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1154,21 +1209,25 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1200,21 +1259,24 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1247,22 +1309,26 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
 
         #5
         self.product_prepared()
         
         #6, 7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         #8
@@ -1295,22 +1361,26 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
 
         #5
         self.product_prepared()
         
         #6, 7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         #8
@@ -1342,21 +1412,24 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1388,21 +1461,24 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
 
         #5
         self.product_prepared()
         
         #6
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #7
@@ -1435,10 +1511,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1446,16 +1522,19 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1488,10 +1567,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1499,16 +1578,20 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1541,10 +1624,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1552,16 +1635,20 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1594,10 +1681,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1605,16 +1692,19 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1647,10 +1737,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1658,19 +1748,22 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         self.reset_outputs()
         
-        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
+                                error_text='error')
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_COIN_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_COIN_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1703,10 +1796,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1714,19 +1807,23 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         self.reset_outputs()
         
-        self.fire_changer_error(error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                            error_text='error')
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                       ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
+                         'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1759,10 +1856,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1770,19 +1867,23 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         self.reset_outputs()
         
-        self.fire_changer_error(error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, error_text='error')
+        self.fire_changer_error(
+                            error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                            error_text='error')
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                           ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
+                             'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1815,10 +1916,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_start_accept_expected_args_list=[()],
-                           changer_stop_accept_expected_args_list=[(), ()],
-                           validator_stack_bill_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_start_accept_expected=[()],
+                           changer_stop_accept_expected=[(), ()],
+                           validator_stack_bill_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1826,19 +1927,22 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         self.reset_outputs()
         
-        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, error_text='error')
+        self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
+                                error_text='error')
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':changer.ERROR_CODE_TUBE_JAM, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()],)
+        self.check_outputs(fsm_error_expected=[
+                                   ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
+                                     'error_text':'error'},)],
+                           changer_stop_accept_expected=[()],)
         self.reset_outputs()
         
         #8
@@ -1861,9 +1965,10 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_validator_error(error_code=1, error_text='error')
         
         #3
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)],
-                           validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)],
+                           validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()])
         self.reset_outputs()
         
         #4
@@ -1893,14 +1998,14 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.fire_validator_error(error_code=1, error_text='error')
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()])
 
         #4
         self.accept_coin_amount(PRODUCTS[product]-3)
         # check coin is accepted
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           changer_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           changer_start_accept_expected=[()])
         self.reset_outputs()
         
         self.accept_bill_amount(PRODUCTS[product])
@@ -1910,8 +2015,8 @@ class TestKioskFsm(unittest.TestCase):
         
         self.accept_coin_amount(4)
         
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #5
@@ -1919,9 +2024,10 @@ class TestKioskFsm(unittest.TestCase):
         
         #6, 7
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)],
-                           fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)],
+                           fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
 
         self.fire_coin_out(1)
@@ -1955,20 +2061,20 @@ class TestKioskFsm(unittest.TestCase):
 
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           changer_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           changer_start_accept_expected=[()])
         self.reset_outputs()
         
         #4
         self.fire_validator_error(error_code=1, error_text='error')
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()])
 
         #5
         self.accept_coin_amount(1)
         # check coin is accepted
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           changer_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           changer_start_accept_expected=[()])
         self.reset_outputs()
         
         self.accept_bill_amount(PRODUCTS[product])
@@ -1978,8 +2084,8 @@ class TestKioskFsm(unittest.TestCase):
         
         self.accept_coin_amount(3)
         
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
         
         #6
@@ -1987,9 +2093,10 @@ class TestKioskFsm(unittest.TestCase):
         
         #7, 8
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)],
-                           fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)],
-                           changer_stop_accept_expected_args_list=[()])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)],
+                           fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)],
+                           changer_stop_accept_expected=[()])
         self.reset_outputs()
 
         self.fire_coin_out(1)
@@ -2034,10 +2141,11 @@ class TestKioskFsm(unittest.TestCase):
         
         #6, 7
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()],
-                           changer_dispense_amount_expected_args_list=[((1,),)],
-                           fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((1,),)],
+                           fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)])
         self.reset_outputs()
 
         self.fire_coin_out(1)
@@ -2080,7 +2188,7 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
@@ -2088,9 +2196,10 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)],
-                           validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)],
+                           validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()])
         self.reset_outputs()
         
         #8
@@ -2130,21 +2239,22 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
         self.reset_outputs()
         
         self.fire_validator_error(error_code=1, error_text='error')
         yield self.sleep_defer(sleep_sec=0.1)
 
         #7
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':1, 'error_text':'error'},)],
-                           validator_return_bill_expected_args_list=[()],
-                           validator_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':1, 
+                                                 'error_text':'error'},)],
+                           validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()])
         self.reset_outputs()
         
         #8
@@ -2180,12 +2290,13 @@ class TestKioskFsm(unittest.TestCase):
 
         #5
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((PRODUCTS[product],),)])
+        self.check_outputs(
+                   changer_dispense_amount_expected=[((PRODUCTS[product],),)])
         self.reset_outputs()
 
         #6
         self.fire_coin_out(PRODUCTS[product])
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2215,16 +2326,16 @@ class TestKioskFsm(unittest.TestCase):
         #check bill not accepted
         self.accept_bill_amount(PRODUCTS[product])
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #4
         yield self.sleep_defer(sleep_sec=0.2)
 
         #5, 6
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2254,16 +2365,16 @@ class TestKioskFsm(unittest.TestCase):
         #check bill not accepted
         self.accept_bill_amount(PRODUCTS[product])
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #4
         yield self.sleep_defer(sleep_sec=0.2)
 
         #5, 6
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2300,16 +2411,16 @@ class TestKioskFsm(unittest.TestCase):
         #check bill not accepted
         self.accept_bill_amount(PRODUCTS[product])
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(validator_return_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_start_accept_expected=[()])
         self.reset_outputs()
         
         #5
         yield self.sleep_defer(sleep_sec=0.4)
 
         #6, 7
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2337,10 +2448,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()],
+                           validator_start_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #4
@@ -2351,7 +2462,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #6
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2381,10 +2492,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()],
+                           validator_start_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #4
@@ -2400,13 +2511,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #7
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         self.fire_coin_out(1)
 
         #8
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2434,10 +2545,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(changer_stop_accept_expected_args_list=[()],
-                           validator_stack_bill_expected_args_list=[()],
-                           validator_start_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[()],
+                           validator_stack_bill_expected=[()],
+                           validator_start_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #4
@@ -2448,7 +2559,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #6
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2479,9 +2590,9 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(changer_stop_accept_expected_args_list=[(), ()],
-                           changer_start_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[(), ()],
+                           changer_start_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #5
@@ -2489,13 +2600,13 @@ class TestKioskFsm(unittest.TestCase):
 
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2526,9 +2637,9 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
-        self.check_outputs(changer_stop_accept_expected_args_list=[(), ()],
-                           changer_start_accept_expected_args_list=[()],
-                           plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(changer_stop_accept_expected=[(), ()],
+                           changer_start_accept_expected=[()],
+                           plc_prepare_expected=[((PRODUCT_1,),)])
         self.reset_outputs()
         
         #5
@@ -2536,13 +2647,13 @@ class TestKioskFsm(unittest.TestCase):
 
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2579,13 +2690,13 @@ class TestKioskFsm(unittest.TestCase):
 
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
         
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     @defer.inlineCallbacks
@@ -2618,7 +2729,7 @@ class TestKioskFsm(unittest.TestCase):
         self.product_prepared()
         
         yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected_args_list=[((1,),)])
+        self.check_outputs(changer_dispense_amount_expected=[((1,),)])
         self.reset_outputs()
 
         #5
@@ -2628,7 +2739,7 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_coin_out(1)
 
         #7
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
         
     def set_kiosk_ready_state(self):
@@ -2654,12 +2765,14 @@ class TestKioskFsm(unittest.TestCase):
 
     def fire_changer_error(self, error_code=1, error_text='error_1'):
         dispatcher.send_minimal(
-            sender=self.changer, signal='error', error_code=error_code, error_text=error_text)
+            sender=self.changer, 
+            signal='error', error_code=error_code, error_text=error_text)
 
 
     def fire_validator_error(self, error_code=1, error_text='error_1'):
         dispatcher.send_minimal(
-            sender=self.validator, signal='error', error_code=error_code, error_text=error_text)
+            sender=self.validator, 
+            signal='error', error_code=error_code, error_text=error_text)
 
 
     def accept_bill_amount(self, amount):
@@ -2703,7 +2816,7 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_bill_amount(1)
         
         def callback_func(dont_care):
-            self.check_outputs(validator_return_bill_expected_args_list=[()])
+            self.check_outputs(validator_return_bill_expected=[()])
             
         return task.deferLater(reactor, 0.1, callback_func, None)
         
@@ -2727,29 +2840,40 @@ class TestKioskFsm(unittest.TestCase):
                       
         
     def check_outputs(self,
-                      fsm_ready_expected_args_list=[],
-                      fsm_reset_sell_expected_args_list=[],
-                      fsm_error_expected_args_list=[],
-                      changer_start_accept_expected_args_list=[],
-                      changer_stop_accept_expected_args_list=[],
-                      changer_dispense_amount_expected_args_list=[],
-                      validator_start_accept_expected_args_list=[],
-                      validator_stop_accept_expected_args_list=[],
-                      validator_stack_bill_expected_args_list=[],
-                      validator_return_bill_expected_args_list=[],
-                      plc_prepare_expected_args_list=[]):
+                      fsm_ready_expected=[],
+                      fsm_reset_sell_expected=[],
+                      fsm_error_expected=[],
+                      changer_start_accept_expected=[],
+                      changer_stop_accept_expected=[],
+                      changer_dispense_amount_expected=[],
+                      validator_start_accept_expected=[],
+                      validator_stop_accept_expected=[],
+                      validator_stack_bill_expected=[],
+                      validator_return_bill_expected=[],
+                      plc_prepare_expected=[]):
         
-        self.assertEquals(fsm_ready_expected_args_list, self.fsm_listener.ready.call_args_list)
-        self.assertEquals(fsm_reset_sell_expected_args_list, self.fsm_listener.reset_sell.call_args_list)
-        self.assertEquals(fsm_error_expected_args_list, self.fsm_listener.error.call_args_list)
-        self.assertEquals(changer_start_accept_expected_args_list, self.changer.start_accept.call_args_list)
-        self.assertEquals(changer_stop_accept_expected_args_list, self.changer.stop_accept.call_args_list)
-        self.assertEquals(changer_dispense_amount_expected_args_list, self.changer.dispense_amount.call_args_list)
-        self.assertEquals(validator_start_accept_expected_args_list, self.validator.start_accept.call_args_list)
-        self.assertEquals(validator_stop_accept_expected_args_list, self.validator.stop_accept.call_args_list)
-        self.assertEquals(validator_stack_bill_expected_args_list, self.validator.stack_bill.call_args_list)
-        self.assertEquals(validator_return_bill_expected_args_list, self.validator.return_bill.call_args_list)
-        self.assertEquals(plc_prepare_expected_args_list, self.plc.prepare.call_args_list)
+        self.assertEquals(fsm_ready_expected, 
+                          self.fsm_listener.ready.call_args_list)
+        self.assertEquals(fsm_reset_sell_expected, 
+                          self.fsm_listener.reset_sell.call_args_list)
+        self.assertEquals(fsm_error_expected, 
+                          self.fsm_listener.error.call_args_list)
+        self.assertEquals(changer_start_accept_expected, 
+                          self.changer.start_accept.call_args_list)
+        self.assertEquals(changer_stop_accept_expected, 
+                          self.changer.stop_accept.call_args_list)
+        self.assertEquals(changer_dispense_amount_expected, 
+                          self.changer.dispense_amount.call_args_list)
+        self.assertEquals(validator_start_accept_expected, 
+                          self.validator.start_accept.call_args_list)
+        self.assertEquals(validator_stop_accept_expected, 
+                          self.validator.stop_accept.call_args_list)
+        self.assertEquals(validator_stack_bill_expected, 
+                          self.validator.stack_bill.call_args_list)
+        self.assertEquals(validator_return_bill_expected, 
+                          self.validator.return_bill.call_args_list)
+        self.assertEquals(plc_prepare_expected, 
+                          self.plc.prepare.call_args_list)
 
 
     def sleep_defer(self, sleep_sec):

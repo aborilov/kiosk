@@ -40,17 +40,23 @@ class TestCashFsm(unittest.TestCase):
         self.validator_fsm.permit_bill = MagicMock()
         
         
-        self.cash_fsm = CashFSM(changer_fsm=self.changer_fsm, validator_fsm=self.validator_fsm)
+        self.cash_fsm = CashFSM(changer_fsm=self.changer_fsm, 
+                                validator_fsm=self.validator_fsm)
         
-        dispatcher.connect(self.fsm_listener.ready, sender=self.cash_fsm, signal='ready')
-        dispatcher.connect(self.fsm_listener.accepted, sender=self.cash_fsm, signal='accepted')
-        dispatcher.connect(self.fsm_listener.not_accepted, sender=self.cash_fsm, signal='not_accepted')
-        dispatcher.connect(self.fsm_listener.error, sender=self.cash_fsm, signal='error')
-        dispatcher.connect(self.fsm_listener.dispensed, sender=self.cash_fsm, signal='dispensed')
+        dispatcher.connect(self.fsm_listener.ready, 
+                           sender=self.cash_fsm, signal='ready')
+        dispatcher.connect(self.fsm_listener.accepted, 
+                           sender=self.cash_fsm, signal='accepted')
+        dispatcher.connect(self.fsm_listener.not_accepted, 
+                           sender=self.cash_fsm, signal='not_accepted')
+        dispatcher.connect(self.fsm_listener.error, 
+                           sender=self.cash_fsm, signal='error')
+        dispatcher.connect(self.fsm_listener.dispensed, 
+                           sender=self.cash_fsm, signal='dispensed')
 
 
     def tearDown(self):
-        pass
+        self.cash_fsm.stop()
 
 
     #                             1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17
@@ -104,8 +110,8 @@ class TestCashFsm(unittest.TestCase):
     def test_2_cash_start_on_init(self):
         self.cash_fsm.start()
 
-        self.check_outputs(changer_fsm_start_expected_args_list=[()],
-                           validator_fsm_start_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_expected=[()],
+                           validator_fsm_start_expected=[()])
 
 
     def test_3_changer_online_on_init(self):
@@ -124,7 +130,8 @@ class TestCashFsm(unittest.TestCase):
 
     def test_5_changer_error_on_init(self):
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -165,7 +172,8 @@ class TestCashFsm(unittest.TestCase):
 
     def test_11_validator_error_on_init(self):
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -188,7 +196,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
 
 
     def test_15_cash_accept_on_init(self):
@@ -259,9 +267,9 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.start()
         
-        self.check_outputs(changer_fsm_start_expected_args_list=[()],
-                           validator_fsm_start_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_expected=[()],
+                           validator_fsm_start_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     def test_20_changer_initialized_validator_online_before_start_on_init(self):
@@ -272,8 +280,8 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.start()
         
-        self.check_outputs(changer_fsm_start_expected_args_list=[()],
-                           validator_fsm_start_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_expected=[()],
+                           validator_fsm_start_expected=[()])
 
 
     def test_21_changer_online_validator_initialized_before_start_on_init(self):
@@ -284,8 +292,8 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.start()
         
-        self.check_outputs(changer_fsm_start_expected_args_list=[()],
-                           validator_fsm_start_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_expected=[()],
+                           validator_fsm_start_expected=[()])
 
 
     #                            22   23   24   25   26   27   28   29   30   31   32   33   34   35   36   37
@@ -362,7 +370,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -415,7 +424,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -444,7 +454,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
 
 
     def test_35_cash_accept_on_wait_ready(self):
@@ -535,7 +545,8 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='online')
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         
         self.check_outputs()
 
@@ -579,7 +590,8 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='offline')
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         
         self.check_outputs()
 
@@ -599,7 +611,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='online')
         
@@ -610,7 +623,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='offline')
         
@@ -621,9 +635,11 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=11, error_text='error_11')
+            sender=self.changer_fsm, signal='error', 
+            error_code=11, error_text='error_11')
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         
         self.check_outputs()
 
@@ -632,7 +648,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='initialized')
         
@@ -667,7 +684,8 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='initialized')
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
         
         self.check_outputs()
 
@@ -680,7 +698,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='initialized')
         
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     #                            54   55   56   57   58   59   60   61   62   63   64   65   66   67   68   69
@@ -756,7 +774,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -809,7 +828,8 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -838,7 +858,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
 
 
     def test_67_cash_accept_on_error(self):
@@ -856,14 +876,15 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.accepted.reset_mock()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code='12', error_text='error_12')
         self.changer_fsm.stop_accept.reset_mock()
         self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
         
         self.cash_fsm.dispense_change()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((1,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((1,),)])
 
 
     def test_69_cash_dispense_all_on_error(self):
@@ -873,14 +894,15 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.accepted.reset_mock()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code='12', error_text='error_12')
         self.changer_fsm.stop_accept.reset_mock()
         self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
         
         self.cash_fsm.dispense_all()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((11,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((11,),)])
 
 
     #                            70   71   72   73   74   75   76   77   78   79   80   81   82   83   84   85
@@ -956,11 +978,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_ready()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12,
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_74_changer_initialized_on_ready(self):
@@ -978,7 +1002,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=10)
 
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((10,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((10,),)])
 
 
     def test_76_amount_dispensed_on_ready(self):
@@ -1012,11 +1036,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_ready()
         
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12,
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_80_validator_initialized_on_ready(self):
@@ -1044,7 +1070,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
 
 
     def test_83_cash_accept_on_ready(self):
@@ -1052,8 +1078,8 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.accept(amount=10)
         
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()],
-                           validator_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()],
+                           validator_fsm_start_accept_expected=[()])
 
 
     def test_84_cash_dispense_change_on_ready(self):
@@ -1142,11 +1168,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_accept_amount()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_90_changer_initialized_on_accept_amount(self):
@@ -1155,7 +1183,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='initialized')
 
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
 
 
     def test_91_amount_dispensed_on_accept_amount(self):
@@ -1189,11 +1217,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_accept_amount()
         
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_95_validator_initialized_on_accept_amount(self):
@@ -1202,7 +1232,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='initialized')
 
-        self.check_outputs(validator_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_fsm_start_accept_expected=[()])
 
 
     def test_96_cash_accept_on_accept_amount(self):
@@ -1241,7 +1271,8 @@ class TestCashFsm(unittest.TestCase):
     # changer_fsm.coin_in (accepted               +    +
     #    sum isn't enough)
     # changer_fsm.coin_in (accepted                         +    +    +    +
-    #    sum is enough)
+    #    sum is enough and can dispense
+    #    change)
     # validator_fsm.bill_in (accepted                                           +    +
     #    sum isn't enough)
     # validator_fsm.bill_in (accepted                                                     +    +    +    +
@@ -1271,7 +1302,8 @@ class TestCashFsm(unittest.TestCase):
 
     def test_99_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum isn't enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum isn't enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1282,38 +1314,41 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=4)
 
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[(), (), ()])
+        self.check_outputs(changer_fsm_start_accept_expected=[(), (), ()])
 
 
     def test_100_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum isn't enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum isn't enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=9)
 
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
 
 
     def test_101_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum is enough and dispense change is available
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=10)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_102_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum is enough and dispense change is available
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1322,15 +1357,16 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
-                           changer_fsm_start_accept_expected_args_list=[()],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+                           changer_fsm_start_accept_expected=[()],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_103_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum is enough and dispense change is available
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1339,29 +1375,31 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=2)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
-                           changer_fsm_start_accept_expected_args_list=[()],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)],
+                           changer_fsm_start_accept_expected=[()],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_104_coin_in_on_accept_amount(self):
         '''
-        handling signal 'coin_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum is enough and dispense change is available
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=11)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_105_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum isn't enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum isn't enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1372,38 +1410,41 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=4)
 
-        self.check_outputs(validator_fsm_start_accept_expected_args_list=[(), (), ()])
+        self.check_outputs(validator_fsm_start_accept_expected=[(), (), ()])
 
 
     def test_106_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum isn't enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum isn't enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=9)
 
-        self.check_outputs(validator_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_fsm_start_accept_expected=[()])
 
 
     def test_107_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum is enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=10)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_108_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum is enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1412,15 +1453,16 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=1)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_start_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_start_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_109_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum is enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
@@ -1429,41 +1471,44 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=2)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_start_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_start_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_110_bill_in_on_accept_amount(self):
         '''
-        handling signal 'bill_in' in FSM state 'accept_amount' when accepted sum is enough
+        handling signal 'bill_in' in FSM state 'accept_amount' 
+        when accepted sum is enough
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=11)
 
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
 
 
     def test_111_check_bill_on_accept_amount(self):
         '''
-        handling signal 'check_bill' in FSM state 'accept_amount' when dispense change is possible
+        handling signal 'check_bill' in FSM state 'accept_amount' 
+        when dispense change is possible
         '''
         self.set_fsm_state_accept_amount(amount=10)
         
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_permit_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_permit_bill_expected=[((10,),)])
 
 
     def test_112_check_bill_on_accept_amount(self):
         '''
-        handling signal 'check_bill' in FSM state 'accept_amount' when dispense change isn't possible
+        handling signal 'check_bill' in FSM state 'accept_amount' 
+        when dispense change isn't possible
         '''
         self.set_fsm_state_accept_amount(amount=10)
         self.changer_fsm.can_dispense_amount.return_value = False
@@ -1471,8 +1516,8 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
         
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)],
-                           validator_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)],
+                           validator_fsm_start_accept_expected=[()])
 
 
     #                                            113  114  115  116  117
@@ -1516,7 +1561,8 @@ class TestCashFsm(unittest.TestCase):
     @defer.inlineCallbacks
     def test_113_accept_timeout_2_sec_on_accept_amount(self):
         '''
-        check accept timeout exceed in FSM state 'accept_amount' when no any payment during timeout
+        check accept timeout exceed in FSM state 'accept_amount' 
+        when no any payment during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=2)
         
@@ -1526,15 +1572,16 @@ class TestCashFsm(unittest.TestCase):
 
         yield self.sleep_defer(sleep_sec=2)
         
-        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_not_accepted_expected=[()],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()])
         
 
     @defer.inlineCallbacks
     def test_114_accept_timeout_2_sec_on_accept_amount(self):
         '''
-        check accept timeout exceed in FSM state 'accept_amount' when not enough payment maked during timeout
+        check accept timeout exceed in FSM state 'accept_amount' 
+        when not enough payment maked during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=2)
 
@@ -1543,21 +1590,22 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=1)
         
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
         self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
-        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()],
-            changer_fsm_start_dispense_expected_args_list=[((9,),)])
+        self.check_outputs(fsm_not_accepted_expected=[()],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()],
+            changer_fsm_start_dispense_expected=[((9,),)])
 
 
     @defer.inlineCallbacks
     def test_115_accept_timeout_4_sec_on_accept_amount(self):
         '''
-        check accept timeout exceed in FSM state 'accept_amount' when no any payment during timeout
+        check accept timeout exceed in FSM state 'accept_amount' 
+        when no any payment during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=4)
         
@@ -1567,15 +1615,16 @@ class TestCashFsm(unittest.TestCase):
             
         yield self.sleep_defer(sleep_sec=2)
 
-        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_not_accepted_expected=[()],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()])
 
         
     @defer.inlineCallbacks
     def test_116_accept_timeout_4_sec_on_accept_amount(self):
         '''
-        check accept timeout exceed in FSM state 'accept_amount' when not enough payment maked during timeout
+        check accept timeout exceed in FSM state 'accept_amount' 
+        when not enough payment maked during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=4)
 
@@ -1584,21 +1633,22 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=3)
         
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
         self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
-        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()],
-            changer_fsm_start_dispense_expected_args_list=[((9,),)])
+        self.check_outputs(fsm_not_accepted_expected=[()],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()],
+            changer_fsm_start_dispense_expected=[((9,),)])
 
     
     @defer.inlineCallbacks
     def test_117_accept_timeout_2_sec_on_accept_amount(self):
         '''
-        check accept timeout not exceed in FSM state 'accept_amount' when enough payment maked during timeout
+        check accept timeout not exceed in FSM state 'accept_amount' 
+        when enough payment maked during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=2)
 
@@ -1607,9 +1657,9 @@ class TestCashFsm(unittest.TestCase):
 
         yield self.sleep_defer(sleep_sec=3)
         
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':10,},)],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()])
 
         
  
@@ -1687,11 +1737,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense()
          
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
  
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
  
  
     def test_122_changer_initialized_on_wait_dispense(self):
@@ -1709,7 +1761,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
  
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)])
  
  
     def test_124_amount_dispensed_on_wait_dispense(self):
@@ -1743,11 +1795,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense()
          
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
  
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
  
  
     def test_128_validator_initialized_on_wait_dispense(self):
@@ -1765,7 +1819,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='bill_in', amount=1)
  
-        self.check_outputs(fsm_accepted_expected_args_list=[({'amount':11,},)])
+        self.check_outputs(fsm_accepted_expected=[({'amount':11,},)])
  
  
     def test_130_check_bill_on_wait_dispense(self):
@@ -1774,7 +1828,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
          
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
  
  
     def test_131_cash_accept_on_wait_dispense(self):
@@ -1795,7 +1849,7 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.dispense_change()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((1,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((1,),)])
  
  
     def test_133_cash_dispense_all_on_wait_dispense(self):
@@ -1808,7 +1862,7 @@ class TestCashFsm(unittest.TestCase):
         
         self.cash_fsm.dispense_all()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((11,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((11,),)])
 
 
     #                            134  135  136  137  138  139  140  141  142  143  144  145  146  147  148  149
@@ -1878,18 +1932,20 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='offline')
  
-        self.check_outputs(fsm_dispensed_expected_args_list=[({'amount':0,},)])
+        self.check_outputs(fsm_dispensed_expected=[({'amount':0,},)])
  
  
     def test_137_changer_error_on_start_dispense(self):
         self.set_fsm_state_start_dispense()
          
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code=12, error_text='error_12')
  
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
  
  
     def test_138_changer_initialized_on_start_dispense(self):
@@ -1916,7 +1972,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='amount_dispensed', amount=10)
  
-        self.check_outputs(fsm_dispensed_expected_args_list=[({'amount':10,},)])
+        self.check_outputs(fsm_dispensed_expected=[({'amount':10,},)])
          
  
     def test_141_validator_online_on_start_dispense(self):
@@ -1941,11 +1997,13 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_start_dispense()
          
         dispatcher.send_minimal(
-            sender=self.validator_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.validator_fsm, signal='error', 
+            error_code=12, error_text='error_12')
  
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           changer_fsm_stop_accept_expected_args_list=[()],
-                           validator_fsm_stop_accept_expected_args_list=[()])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
  
  
     def test_144_validator_initialized_on_start_dispense(self):
@@ -1972,7 +2030,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.validator_fsm, signal='check_bill', amount=10)
          
-        self.check_outputs(validator_fsm_ban_bill_expected_args_list=[((10,),)])
+        self.check_outputs(validator_fsm_ban_bill_expected=[((10,),)])
  
  
     def test_147_cash_accept_on_start_dispense(self):
@@ -2030,7 +2088,8 @@ class TestCashFsm(unittest.TestCase):
     @defer.inlineCallbacks
     def test_150_accept_timeout_4_sec_on_accept_amount(self):
         '''
-        check accept timeout exceed in FSM state 'accept_amount' when not enough payment maked during timeout
+        check accept timeout exceed in FSM state 'accept_amount' 
+        when not enough payment maked during timeout
         '''
         self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=4)
 
@@ -2043,15 +2102,15 @@ class TestCashFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=3)
         
-        self.check_outputs(changer_fsm_start_accept_expected_args_list=[()])
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
         self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
-        self.check_outputs(fsm_not_accepted_expected_args_list=[()],
-            changer_fsm_stop_accept_expected_args_list=[()],
-            validator_fsm_stop_accept_expected_args_list=[()],
-            changer_fsm_start_dispense_expected_args_list=[((9,),)])
+        self.check_outputs(fsm_not_accepted_expected=[()],
+            changer_fsm_stop_accept_expected=[()],
+            validator_fsm_stop_accept_expected=[()],
+            changer_fsm_start_dispense_expected=[((9,),)])
 
 
     def test_151_double_cash_dispense_change_on_error(self):
@@ -2061,7 +2120,8 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.accepted.reset_mock()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code='12', error_text='error_12')
         self.changer_fsm.stop_accept.reset_mock()
         self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
@@ -2070,7 +2130,7 @@ class TestCashFsm(unittest.TestCase):
         self.changer_fsm.start_dispense.reset_mock()
         self.cash_fsm.dispense_change()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((0,),)])
 
 
     def test_152_double_cash_dispense_all_on_error(self):
@@ -2080,7 +2140,8 @@ class TestCashFsm(unittest.TestCase):
         self.fsm_listener.accepted.reset_mock()
         
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code='12', error_text='error_12')
         self.changer_fsm.stop_accept.reset_mock()
         self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
@@ -2089,7 +2150,151 @@ class TestCashFsm(unittest.TestCase):
         self.changer_fsm.start_dispense.reset_mock()
         self.cash_fsm.dispense_all()
          
-        self.check_outputs(changer_fsm_start_dispense_expected_args_list=[((0,),)])
+        self.check_outputs(changer_fsm_start_dispense_expected=[((0,),)])
+
+    #                                            153  154  155  156  157
+    # inputs
+    # fsm.state("INI",                           AA   AA   AA   AA   AA
+    #          "WR",
+    #          "ERR",
+    #          "RDY",
+    #          "AA",
+    #          "WD",                
+    #          "SD")
+    # changer_fsm.coin_in (accepted               +
+    #    sum isn't enough and cannot dispense
+    #    change)
+    # changer_fsm.coin_in (accepted                    +
+    #    sum is enough but cannot dispense
+    #    change)
+    # changer_fsm.coin_in (second accepted                  +
+    #    sum is more and cannot dispense
+    #    change)
+    # changer_fsm.coin_in (first accepted                        +
+    #    sum is more and cannot dispense
+    #    change)
+    # accept_timeout = 2 sec                                          +
+    #    (invalid coin payment during timeout)
+    #
+    # outputs
+    # fsm_listener.ready                          -    -    -    -    -
+    # fsm_listener.accepted                       -    +    -    -    -
+    # fsm_listener.not_accepted                   -    -    -    -    -
+    # fsm_listener.dispensed                      -    -    -    -    -
+    # fsm_listener.error                          -    -    -    -    -
+    # changer_fsm.start                           -    -    -    -    -
+    # changer_fsm.start_accept                    +    +    +    +    +
+    # changer_fsm.stop_accept                     -    +    -    -    -
+    # changer_fsm.start_dispense                  -    -    +    +    +
+    # changer_fsm.stop_dispense                   -    -    -    -    -
+    # validator_fsm.start                         -    -    -    -    -
+    # validator_fsm.start_accept                  -    -    -    -    -
+    # validator_fsm.stop_accept                   -    +    -    -    -
+    # validator_fsm.ban_bill                      -    -    -    -    -
+    # validator_fsm.permit_bill                   -    -    -    -    -
+
+    def test_153_coin_in_on_accept_amount(self):
+        '''
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum isn't enough and dispense change isn't available
+        '''
+        self.set_fsm_state_accept_amount(amount=10)
+        
+        self.changer_fsm.can_dispense_amount.return_value = False
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=9)
+
+        self.check_outputs(changer_fsm_start_accept_expected=[()])
+
+
+    def test_154_coin_in_on_accept_amount(self):
+        '''
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when accepted sum is enough, but dispense change isn't available
+        '''
+        self.set_fsm_state_accept_amount(amount=10)
+        
+        self.changer_fsm.can_dispense_amount.return_value = False
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=9)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=1)
+
+        self.check_outputs(fsm_accepted_expected=[({'amount':10,},)],
+                           changer_fsm_start_accept_expected=[()],
+                           changer_fsm_stop_accept_expected=[()],
+                           validator_fsm_stop_accept_expected=[()])
+
+
+    def test_155_coin_in_on_accept_amount(self):
+        '''
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when after first payment accepted sum is less than need, but after
+        second payment is more, and dispense change isn't available
+        '''
+        self.set_fsm_state_accept_amount(amount=10)
+        
+        self.changer_fsm.can_dispense_amount.return_value = False
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=9)
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=2)
+
+        self.check_outputs(changer_fsm_start_accept_expected=[(), ()],
+                           changer_fsm_start_dispense_expected=[((2,),)])
+
+
+    def test_156_coin_in_on_accept_amount(self):
+        '''
+        handling signal 'coin_in' in FSM state 'accept_amount' 
+        when after first payment accepted sum is more than need, but 
+        dispense change isn't available
+        '''
+        self.set_fsm_state_accept_amount(amount=10)
+        
+        self.changer_fsm.can_dispense_amount.return_value = False
+        
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=11)
+
+        self.check_outputs(changer_fsm_start_accept_expected=[()],
+                           changer_fsm_start_dispense_expected=[((11,),)])
+
+
+    @defer.inlineCallbacks
+    def test_157_accept_timeout_2_sec_on_accept_amount(self):
+        '''
+        check accept timeout not exceed in FSM state 'accept_amount' 
+        when invalid coins in during timeout
+        '''
+        self.set_fsm_state_accept_amount(amount=10, accept_timeout_sec=2)
+
+        self.changer_fsm.can_dispense_amount.return_value = False
+        
+        yield self.sleep_defer(sleep_sec=1)
+
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=11)
+
+        yield self.sleep_defer(sleep_sec=1)
+
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=11)
+
+        yield self.sleep_defer(sleep_sec=1)
+
+        dispatcher.send_minimal(
+            sender=self.changer_fsm, signal='coin_in', amount=11)
+
+        yield self.sleep_defer(sleep_sec=1)
+        
+        self.check_outputs(changer_fsm_start_accept_expected=[(), (), ()],
+                           changer_fsm_start_dispense_expected=[((11,),),
+                                                                ((11,),),
+                                                                ((11,),)])
 
 
     def set_fsm_state_wait_ready(self):
@@ -2101,7 +2306,8 @@ class TestCashFsm(unittest.TestCase):
     def set_fsm_state_error(self):
         self.set_fsm_state_ready()
         dispatcher.send_minimal(
-            sender=self.changer_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.changer_fsm, signal='error', 
+            error_code='12', error_text='error_12')
         self.changer_fsm.stop_accept.reset_mock()
         self.validator_fsm.stop_accept.reset_mock()
         self.fsm_listener.error.reset_mock()
@@ -2140,36 +2346,51 @@ class TestCashFsm(unittest.TestCase):
 
 
     def check_outputs(self,
-                      fsm_ready_expected_args_list=[],
-                      fsm_accepted_expected_args_list=[],
-                      fsm_not_accepted_expected_args_list=[],
-                      fsm_dispensed_expected_args_list=[],
-                      fsm_error_expected_args_list=[],
-                      changer_fsm_start_expected_args_list=[],
-                      changer_fsm_start_accept_expected_args_list=[],
-                      changer_fsm_stop_accept_expected_args_list=[],
-                      changer_fsm_start_dispense_expected_args_list=[],
-                      changer_fsm_stop_dispense_expected_args_list=[],
-                      validator_fsm_start_expected_args_list=[],
-                      validator_fsm_start_accept_expected_args_list=[],
-                      validator_fsm_stop_accept_expected_args_list=[],
-                      validator_fsm_ban_bill_expected_args_list=[],
-                      validator_fsm_permit_bill_expected_args_list=[]):
-        self.assertEquals(fsm_ready_expected_args_list, self.fsm_listener.ready.call_args_list)
-        self.assertEquals(fsm_accepted_expected_args_list, self.fsm_listener.accepted.call_args_list)
-        self.assertEquals(fsm_not_accepted_expected_args_list, self.fsm_listener.not_accepted.call_args_list)
-        self.assertEquals(fsm_dispensed_expected_args_list, self.fsm_listener.dispensed.call_args_list)
-        self.assertEquals(fsm_error_expected_args_list, self.fsm_listener.error.call_args_list)
-        self.assertEquals(changer_fsm_start_expected_args_list, self.changer_fsm.start.call_args_list)
-        self.assertEquals(changer_fsm_start_accept_expected_args_list, self.changer_fsm.start_accept.call_args_list)
-        self.assertEquals(changer_fsm_stop_accept_expected_args_list, self.changer_fsm.stop_accept.call_args_list)
-        self.assertEquals(changer_fsm_start_dispense_expected_args_list, self.changer_fsm.start_dispense.call_args_list)
-        self.assertEquals(changer_fsm_stop_dispense_expected_args_list, self.changer_fsm.stop_dispense.call_args_list)
-        self.assertEquals(validator_fsm_start_expected_args_list, self.validator_fsm.start.call_args_list)
-        self.assertEquals(validator_fsm_start_accept_expected_args_list, self.validator_fsm.start_accept.call_args_list)
-        self.assertEquals(validator_fsm_stop_accept_expected_args_list, self.validator_fsm.stop_accept.call_args_list)
-        self.assertEquals(validator_fsm_ban_bill_expected_args_list, self.validator_fsm.ban_bill.call_args_list)
-        self.assertEquals(validator_fsm_permit_bill_expected_args_list, self.validator_fsm.permit_bill.call_args_list)
+                      fsm_ready_expected=[],
+                      fsm_accepted_expected=[],
+                      fsm_not_accepted_expected=[],
+                      fsm_dispensed_expected=[],
+                      fsm_error_expected=[],
+                      changer_fsm_start_expected=[],
+                      changer_fsm_start_accept_expected=[],
+                      changer_fsm_stop_accept_expected=[],
+                      changer_fsm_start_dispense_expected=[],
+                      changer_fsm_stop_dispense_expected=[],
+                      validator_fsm_start_expected=[],
+                      validator_fsm_start_accept_expected=[],
+                      validator_fsm_stop_accept_expected=[],
+                      validator_fsm_ban_bill_expected=[],
+                      validator_fsm_permit_bill_expected=[]):
+        self.assertEquals(fsm_ready_expected, 
+                          self.fsm_listener.ready.call_args_list)
+        self.assertEquals(fsm_accepted_expected, 
+                          self.fsm_listener.accepted.call_args_list)
+        self.assertEquals(fsm_not_accepted_expected, 
+                          self.fsm_listener.not_accepted.call_args_list)
+        self.assertEquals(fsm_dispensed_expected, 
+                          self.fsm_listener.dispensed.call_args_list)
+        self.assertEquals(fsm_error_expected, 
+                          self.fsm_listener.error.call_args_list)
+        self.assertEquals(changer_fsm_start_expected, 
+                          self.changer_fsm.start.call_args_list)
+        self.assertEquals(changer_fsm_start_accept_expected, 
+                          self.changer_fsm.start_accept.call_args_list)
+        self.assertEquals(changer_fsm_stop_accept_expected, 
+                          self.changer_fsm.stop_accept.call_args_list)
+        self.assertEquals(changer_fsm_start_dispense_expected, 
+                          self.changer_fsm.start_dispense.call_args_list)
+        self.assertEquals(changer_fsm_stop_dispense_expected, 
+                          self.changer_fsm.stop_dispense.call_args_list)
+        self.assertEquals(validator_fsm_start_expected, 
+                          self.validator_fsm.start.call_args_list)
+        self.assertEquals(validator_fsm_start_accept_expected, 
+                          self.validator_fsm.start_accept.call_args_list)
+        self.assertEquals(validator_fsm_stop_accept_expected, 
+                          self.validator_fsm.stop_accept.call_args_list)
+        self.assertEquals(validator_fsm_ban_bill_expected, 
+                          self.validator_fsm.ban_bill.call_args_list)
+        self.assertEquals(validator_fsm_permit_bill_expected, 
+                          self.validator_fsm.permit_bill.call_args_list)
 
 
     def reset_outputs(self):

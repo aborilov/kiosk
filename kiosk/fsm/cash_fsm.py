@@ -67,7 +67,10 @@ class CashFSM(Machine):
 
         ]
         super(CashFSM, self).__init__(
-            states=states, transitions=transitions, initial='init', ignore_invalid_triggers=True)
+            states=states,
+            transitions=transitions,
+            initial='init',
+            ignore_invalid_triggers=True)
 
         self.changer_fsm = changer_fsm
         self.validator_fsm = validator_fsm
@@ -75,16 +78,25 @@ class CashFSM(Machine):
         self.changer_state = DEVICE_STATE_OFFLINE
         self.validator_state = DEVICE_STATE_OFFLINE
 
-        dispatcher.connect(self._on_changer_offline, sender=changer_fsm, signal='offline')
-        dispatcher.connect(self._on_changer_ready, sender=changer_fsm, signal='initialized')
-        dispatcher.connect(self._on_changer_error, sender=changer_fsm, signal='error')
+        dispatcher.connect(self._on_changer_offline,
+                           sender=changer_fsm, signal='offline')
+        dispatcher.connect(self._on_changer_ready, 
+                           sender=changer_fsm, signal='initialized')
+        dispatcher.connect(self._on_changer_error, 
+                           sender=changer_fsm, signal='error')
         dispatcher.connect(self.coin_in, sender=changer_fsm, signal='coin_in')
-        dispatcher.connect(self.amount_dispensed, sender=changer_fsm, signal='amount_dispensed')
-        dispatcher.connect(self._on_validator_offline, sender=validator_fsm, signal='offline')
-        dispatcher.connect(self._on_validator_ready, sender=validator_fsm, signal='initialized')
-        dispatcher.connect(self._on_validator_error, sender=validator_fsm, signal='error')
-        dispatcher.connect(self.bill_in_1, sender=validator_fsm, signal='bill_in')
-        dispatcher.connect(self.check_bill, sender=validator_fsm, signal='check_bill')
+        dispatcher.connect(self.amount_dispensed, 
+                           sender=changer_fsm, signal='amount_dispensed')
+        dispatcher.connect(self._on_validator_offline, 
+                           sender=validator_fsm, signal='offline')
+        dispatcher.connect(self._on_validator_ready, 
+                           sender=validator_fsm, signal='initialized')
+        dispatcher.connect(self._on_validator_error, 
+                           sender=validator_fsm, signal='error')
+        dispatcher.connect(self.bill_in_1, 
+                           sender=validator_fsm, signal='bill_in')
+        dispatcher.connect(self.check_bill, 
+                           sender=validator_fsm, signal='check_bill')
 
         # init parameters
         self._need_accept_amount = 0
@@ -101,7 +113,6 @@ class CashFSM(Machine):
         self.validator_fsm.start()
 
     def stop(self):
-        # TODO reset FSM
         self._stop_acceptance_monitor()
         self.changer_fsm.stop()
         self.validator_fsm.stop()
@@ -192,8 +203,9 @@ class CashFSM(Machine):
         accepted_amount = self._accepted_amount + amount
         if not self.changer_fsm.can_dispense_amount(accepted_amount):
             return False
-        change_amount = self._accepted_amount + amount - self._need_accept_amount
-        if change_amount > 0 and not self.changer_fsm.can_dispense_amount(change_amount):
+        change_amount = accepted_amount - self._need_accept_amount
+        if (change_amount > 0 and 
+            not self.changer_fsm.can_dispense_amount(change_amount)):
             return False
         return True
 
@@ -226,7 +238,8 @@ class CashFSM(Machine):
         self._stop_acceptance_monitor()
         self._stop_accept()
         dispatcher.send_minimal(
-            sender=self, signal='error', error_code=error_code, error_text=error_text)
+            sender=self, signal='error', 
+            error_code=error_code, error_text=error_text)
 
     def _start_acceptance_monitor(self):
         self._stop_acceptance_monitor()

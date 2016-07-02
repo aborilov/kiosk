@@ -38,11 +38,15 @@ class TestKioskFsm(unittest.TestCase):
         self.plc = MagicMock()
         self.plc.prepare = MagicMock()
         
-        self.kiosk_fsm = KioskFSM(cash_fsm=self.cash_fsm, plc=self.plc, products=PRODUCTS)
+        self.kiosk_fsm = KioskFSM(cash_fsm=self.cash_fsm, plc=self.plc, 
+                                  products=PRODUCTS)
         
-        dispatcher.connect(self.fsm_listener.ready, sender=self.kiosk_fsm, signal='ready')
-        dispatcher.connect(self.fsm_listener.reset_sell, sender=self.kiosk_fsm, signal='reset_sell')
-        dispatcher.connect(self.fsm_listener.error, sender=self.kiosk_fsm, signal='error')
+        dispatcher.connect(self.fsm_listener.ready, 
+                           sender=self.kiosk_fsm, signal='ready')
+        dispatcher.connect(self.fsm_listener.reset_sell, 
+                           sender=self.kiosk_fsm, signal='reset_sell')
+        dispatcher.connect(self.fsm_listener.error, 
+                           sender=self.kiosk_fsm, signal='error')
 
 
     def tearDown(self):
@@ -87,7 +91,7 @@ class TestKioskFsm(unittest.TestCase):
     def test_2_kiosk_start_on_init(self):
         self.kiosk_fsm.start()
 
-        self.check_outputs(cash_fsm_start_expected_args_list=[()])
+        self.check_outputs(cash_fsm_start_expected=[()])
 
 
     def test_3_cash_ready_on_init(self):
@@ -99,7 +103,8 @@ class TestKioskFsm(unittest.TestCase):
 
     def test_4_cash_error_on_init(self):
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -196,14 +201,15 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='ready')
 
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     def test_14_cash_error_on_wait_ready(self):
         self.set_fsm_state_wait_ready()
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -321,7 +327,8 @@ class TestKioskFsm(unittest.TestCase):
         self.set_fsm_state_error()
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
         self.check_outputs()
 
@@ -439,10 +446,13 @@ class TestKioskFsm(unittest.TestCase):
         self.set_fsm_state_ready()
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           cash_fsm_dispense_all_expected_args_list=[()])
+        self.check_outputs(
+           fsm_error_expected=[({'error_code':12, 
+                                           'error_text':'error_12'},)],
+           cash_fsm_dispense_all_expected=[()])
 
 
     def test_35_not_accepted_on_ready(self):
@@ -495,7 +505,8 @@ class TestKioskFsm(unittest.TestCase):
         
         self.kiosk_fsm.sell(product=PRODUCT_1)
 
-        self.check_outputs(cash_fsm_accept_expected_args_list=[((PRODUCTS[PRODUCT_1],),)])
+        self.check_outputs(
+               cash_fsm_accept_expected=[((PRODUCTS[PRODUCT_1],),)])
 
 
     def test_41_sell_invalid_product_on_ready(self):
@@ -503,8 +514,8 @@ class TestKioskFsm(unittest.TestCase):
         
         self.kiosk_fsm.sell(product=INVALID_PRODUCT)
 
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     #                            42   43   44   45   46   47   48   49   50   51
@@ -559,10 +570,13 @@ class TestKioskFsm(unittest.TestCase):
         self.set_fsm_state_start_sell(product=PRODUCT_1)
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           cash_fsm_dispense_all_expected_args_list=[()])
+        self.check_outputs(
+           fsm_error_expected=[({'error_code':12, 
+                                           'error_text':'error_12'},)],
+           cash_fsm_dispense_all_expected=[()])
 
 
     def test_45_not_accepted_on_start_sell(self):
@@ -571,8 +585,8 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='not_accepted')
 
-        self.check_outputs(fsm_reset_sell_expected_args_list=[()],
-                           fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_reset_sell_expected=[()],
+                           fsm_ready_expected=[()])
 
 
     def test_46_accepted_on_start_sell(self):
@@ -581,7 +595,7 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='accepted')
 
-        self.check_outputs(plc_prepare_expected_args_list=[((PRODUCT_1,),)])
+        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)])
 
 
     def test_47_dispensed_on_start_sell(self):
@@ -679,10 +693,12 @@ class TestKioskFsm(unittest.TestCase):
         self.set_fsm_state_start_prepare()
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)],
-                           cash_fsm_dispense_change_expected_args_list=[()])
+        self.check_outputs(
+           fsm_error_expected=[({'error_code':12, 'error_text':'error_12'},)],
+           cash_fsm_dispense_change_expected=[()])
 
 
     def test_55_not_accepted_on_start_prepare(self):
@@ -718,7 +734,7 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.plc, signal='prepared')
 
-        self.check_outputs(cash_fsm_dispense_change_expected_args_list=[()])
+        self.check_outputs(cash_fsm_dispense_change_expected=[()])
 
 
     def test_59_not_prepared_on_start_prepare(self):
@@ -727,7 +743,7 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.plc, signal='not_prepared')
 
-        self.check_outputs(cash_fsm_dispense_all_expected_args_list=[()])
+        self.check_outputs(cash_fsm_dispense_all_expected=[()])
 
 
     def test_60_sell_valid_product_on_start_prepare(self):
@@ -798,9 +814,11 @@ class TestKioskFsm(unittest.TestCase):
         self.set_fsm_state_start_dispense()
         
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code=12, error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code=12, error_text='error_12')
 
-        self.check_outputs(fsm_error_expected_args_list=[({'error_code':12, 'error_text':'error_12'},)])
+        self.check_outputs(fsm_error_expected=[({'error_code':12, 
+                                                 'error_text':'error_12'},)])
 
 
     def test_65_not_accepted_on_start_dispense(self):
@@ -827,7 +845,7 @@ class TestKioskFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='dispensed')
 
-        self.check_outputs(fsm_ready_expected_args_list=[()])
+        self.check_outputs(fsm_ready_expected=[()])
 
 
     def test_68_prepared_on_start_dispense(self):
@@ -879,7 +897,8 @@ class TestKioskFsm(unittest.TestCase):
     def set_fsm_state_error(self):
         self.set_fsm_state_ready()
         dispatcher.send_minimal(
-            sender=self.cash_fsm, signal='error', error_code='12', error_text='error_12')
+            sender=self.cash_fsm, 
+            signal='error', error_code='12', error_text='error_12')
         self.fsm_listener.error.reset_mock()
         self.cash_fsm.dispense_all.reset_mock()
 
@@ -890,14 +909,18 @@ class TestKioskFsm(unittest.TestCase):
         self.cash_fsm.accept.reset_mock()
 
 
-    def set_fsm_state_start_prepare(self, product=PRODUCT_1, amount=PRODUCTS[PRODUCT_1]):
+    def set_fsm_state_start_prepare(self, 
+                                    product=PRODUCT_1, 
+                                    amount=PRODUCTS[PRODUCT_1]):
         self.set_fsm_state_start_sell(product=product)
         dispatcher.send_minimal(
             sender=self.cash_fsm, signal='accepted', amount=amount)
         self.plc.prepare.reset_mock()
 
 
-    def set_fsm_state_start_dispense(self, product=PRODUCT_1, amount=PRODUCTS[PRODUCT_1]):
+    def set_fsm_state_start_dispense(self, 
+                                     product=PRODUCT_1, 
+                                     amount=PRODUCTS[PRODUCT_1]):
         self.set_fsm_state_start_prepare(product=product, amount=amount)
         dispatcher.send_minimal(
             sender=self.plc, signal='prepared')
@@ -905,19 +928,27 @@ class TestKioskFsm(unittest.TestCase):
 
 
     def check_outputs(self,
-                      fsm_ready_expected_args_list=[],
-                      fsm_reset_sell_expected_args_list=[],
-                      fsm_error_expected_args_list=[],
-                      cash_fsm_start_expected_args_list=[],
-                      cash_fsm_accept_expected_args_list=[],
-                      cash_fsm_dispense_all_expected_args_list=[],
-                      cash_fsm_dispense_change_expected_args_list=[],
-                      plc_prepare_expected_args_list=[]):
-        self.assertEquals(fsm_ready_expected_args_list, self.fsm_listener.ready.call_args_list)
-        self.assertEquals(fsm_reset_sell_expected_args_list, self.fsm_listener.reset_sell.call_args_list)
-        self.assertEquals(fsm_error_expected_args_list, self.fsm_listener.error.call_args_list)
-        self.assertEquals(cash_fsm_start_expected_args_list, self.cash_fsm.start.call_args_list)
-        self.assertEquals(cash_fsm_accept_expected_args_list, self.cash_fsm.accept.call_args_list)
-        self.assertEquals(cash_fsm_dispense_all_expected_args_list, self.cash_fsm.dispense_all.call_args_list)
-        self.assertEquals(cash_fsm_dispense_change_expected_args_list, self.cash_fsm.dispense_change.call_args_list)
-        self.assertEquals(plc_prepare_expected_args_list, self.plc.prepare.call_args_list)
+                      fsm_ready_expected=[],
+                      fsm_reset_sell_expected=[],
+                      fsm_error_expected=[],
+                      cash_fsm_start_expected=[],
+                      cash_fsm_accept_expected=[],
+                      cash_fsm_dispense_all_expected=[],
+                      cash_fsm_dispense_change_expected=[],
+                      plc_prepare_expected=[]):
+        self.assertEquals(fsm_ready_expected, 
+                          self.fsm_listener.ready.call_args_list)
+        self.assertEquals(fsm_reset_sell_expected, 
+                          self.fsm_listener.reset_sell.call_args_list)
+        self.assertEquals(fsm_error_expected, 
+                          self.fsm_listener.error.call_args_list)
+        self.assertEquals(cash_fsm_start_expected, 
+                          self.cash_fsm.start.call_args_list)
+        self.assertEquals(cash_fsm_accept_expected, 
+                          self.cash_fsm.accept.call_args_list)
+        self.assertEquals(cash_fsm_dispense_all_expected, 
+                          self.cash_fsm.dispense_all.call_args_list)
+        self.assertEquals(cash_fsm_dispense_change_expected, 
+                          self.cash_fsm.dispense_change.call_args_list)
+        self.assertEquals(plc_prepare_expected, 
+                          self.plc.prepare.call_args_list)
