@@ -22,7 +22,7 @@ class BillValidatorFSM(Machine):
             ['check_bill',             'wait_bill',       'bill_confirm',     None,           None,            None,            '_check_bill'       ],
             ['stop_accept',            'wait_bill',       'ready',            None,           None,            None,             None               ],
             ['ban_bill',               'bill_confirm',    'ready',            None,           None,           '_ban_bill',       None               ],
-            ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',   '_fire_bill_in'     ],
+            ['permit_bill',            'bill_confirm',    'ready',            None,           None,           '_permit_bill',    None               ],
 
             ['check_bill',             'ready',           'ready',            None,           None,           '_ban_bill',       None               ],
             ['check_bill',             'error',           'error',            None,           None,           '_ban_bill',       None               ],
@@ -50,6 +50,8 @@ class BillValidatorFSM(Machine):
         dispatcher.connect(self.offline, sender=validator, signal='offline')
         dispatcher.connect(self.check_bill, 
                            sender=validator, signal='check_bill')
+        dispatcher.connect(self.bill_in, 
+                           sender=validator, signal='bill_in')
 
         self._accepted_amount = 0
 
@@ -104,9 +106,38 @@ class BillValidatorFSM(Machine):
         self.validator.stack_bill()
 
 
-    def _fire_bill_in(self, amount=0):
-        reactor.callLater(0, self._fire_bill_in_impl, amount=amount) #@UndefinedVariable
+#     def _fire_bill_in(self, amount=0):
+#         reactor.callLater(0, self._fire_bill_in_impl, amount=amount) #@UndefinedVariable
 
-    def _fire_bill_in_impl(self, amount=0):
+    def bill_in(self, amount=0):
+        dispatcher.send_minimal(sender=self, signal='bill_in', amount=amount)
+        self._total_amount_changed(self.get_total_amount())
+        self._bill_count_changed(self.get_bill_count())
+#             sender=self, signal='bill_in', amount=self._accepted_amount)
+
+    #######################
+    ## Public Methods
+    #######################
+
+    def get_total_amount(self):
+        return self.validator.get_total_amount()
+    
+    def set_total_amount(self, amount=0):
+        return self.validator.set_total_amount(amount=amount)
+
+    def get_bill_count(self):
+        return self.validator.get_bill_count()
+
+    #######################
+    ## Events
+    #######################
+    
+    def _total_amount_changed(self, amount):
         dispatcher.send_minimal(
-            sender=self, signal='bill_in', amount=self._accepted_amount)
+            sender=self, signal='total_amount_changed', 
+            amount=amount)
+
+    def _bill_count_changed(self, count):
+        dispatcher.send_minimal(
+            sender=self, signal='bill_count_changed', 
+            count=count)

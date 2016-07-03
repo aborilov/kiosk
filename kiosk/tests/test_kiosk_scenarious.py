@@ -10,7 +10,7 @@ from kiosk.fsm.changer_fsm import ChangerFSM
 from kiosk.fsm.validator_fsm import BillValidatorFSM
 from kiosk.fsm.cash_fsm import CashFSM
 
-from pymdb.device import changer, bill_validator
+from pymdb.device import changer
 
 try:
     from unittest.mock import MagicMock
@@ -109,12 +109,10 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-6)
         self.check_outputs(changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         self.accept_coin_amount(6)
         self.check_outputs(changer_stop_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -142,18 +140,16 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product]-6)
+        self.check_bill_amount(PRODUCTS[product]-6)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(validator_start_accept_expected=[()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
-        self.accept_bill_amount(6)
+        self.check_bill_amount(6)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -184,14 +180,12 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-6)
         self.check_outputs(changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
-        self.accept_bill_amount(6)
+        self.check_bill_amount(6)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -226,7 +220,6 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(7)
         self.check_outputs(changer_stop_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -234,7 +227,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
@@ -260,16 +252,15 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product]-6)
+        self.check_bill_amount(PRODUCTS[product]-6)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
         
-        self.accept_bill_amount(7)
+        self.check_bill_amount(7)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -277,7 +268,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         #6
         self.fire_coin_out(1)
@@ -307,12 +297,11 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-6)
         self.reset_outputs()
 
-        self.accept_bill_amount(7)
+        self.check_bill_amount(7)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -320,7 +309,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
@@ -385,11 +373,11 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product]-6)
+        self.check_bill_amount(PRODUCTS[product]-6)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
         
-        self.accept_bill_amount(5)
+        self.check_bill_amount(5)
         
         #4
         yield self.sleep_defer(sleep_sec=0.5)
@@ -427,7 +415,7 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-6)
         self.reset_outputs()
 
-        self.accept_bill_amount(5)
+        self.check_bill_amount(5)
         
         #4
         yield self.sleep_defer(sleep_sec=0.5)
@@ -470,14 +458,13 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #4
-        self.accept_bill_amount(6)
+        self.check_bill_amount(6, accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
-        
+       
         #6
         yield self.sleep_defer(sleep_sec=0.5)
         
@@ -511,21 +498,20 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product]-9)
+        self.check_bill_amount(PRODUCTS[product]-9)
         yield self.sleep_defer(sleep_sec=0.1)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
         #4
         self.changer.can_dispense_amount = MagicMock(return_value=False)
-        self.accept_bill_amount(6)
+        self.check_bill_amount(6, accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
         
         #6
         yield self.sleep_defer(sleep_sec=0.5)
@@ -561,19 +547,18 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-9)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
         #4
         self.changer.can_dispense_amount = MagicMock(return_value=False)
-        self.accept_bill_amount(6)
+        self.check_bill_amount(6, accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         
         #5
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
         
         #6
         yield self.sleep_defer(sleep_sec=0.5)
@@ -607,14 +592,13 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product], accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         
         #4
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
-        
+       
         #5
         yield self.sleep_defer(sleep_sec=0.5)
         
@@ -647,24 +631,22 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #3
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product], accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         
         #4
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
 
         #5
         self.changer.can_dispense_amount = MagicMock(return_value=True)
         self.accept_coin_amount(PRODUCTS[product]-1)
-        self.accept_bill_amount(1)
+        self.check_bill_amount(1)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            plc_prepare_expected=[((PRODUCT_1,),)],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
 
         #6
         self.product_prepared()
@@ -695,7 +677,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.check_kiosk_is_not_serviced()
@@ -723,7 +704,6 @@ class TestKioskFsm(unittest.TestCase):
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.check_kiosk_is_not_serviced()
@@ -752,7 +732,6 @@ class TestKioskFsm(unittest.TestCase):
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                              'error_text':'error'},)],
                changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.check_kiosk_is_not_serviced()
@@ -779,7 +758,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.check_kiosk_is_not_serviced()
@@ -812,7 +790,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         yield self.check_kiosk_is_not_serviced()
@@ -846,7 +823,6 @@ class TestKioskFsm(unittest.TestCase):
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         yield self.check_kiosk_is_not_serviced()
@@ -880,7 +856,6 @@ class TestKioskFsm(unittest.TestCase):
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                              'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         yield self.check_kiosk_is_not_serviced()
@@ -913,7 +888,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         yield self.check_kiosk_is_not_serviced()
@@ -940,7 +914,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(2)
+        self.check_bill_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
@@ -953,7 +927,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -980,7 +953,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(2)
+        self.check_bill_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
@@ -993,7 +966,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1021,7 +993,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(2)
+        self.check_bill_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
@@ -1036,7 +1008,6 @@ class TestKioskFsm(unittest.TestCase):
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()],
                            changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1064,7 +1035,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(2)
+        self.check_bill_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
 
@@ -1079,7 +1050,6 @@ class TestKioskFsm(unittest.TestCase):
                              'error_text':'error'},)],
                    changer_stop_accept_expected=[()],
                    changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1107,14 +1077,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
@@ -1128,7 +1097,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1156,14 +1124,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(
@@ -1178,7 +1145,6 @@ class TestKioskFsm(unittest.TestCase):
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1206,14 +1172,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(
@@ -1228,7 +1193,6 @@ class TestKioskFsm(unittest.TestCase):
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                              'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1256,14 +1220,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
@@ -1277,7 +1240,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1306,14 +1268,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(
@@ -1329,7 +1290,6 @@ class TestKioskFsm(unittest.TestCase):
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()],
                            changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1358,14 +1318,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(
@@ -1381,7 +1340,6 @@ class TestKioskFsm(unittest.TestCase):
                              'error_text':'error'},)],
                            changer_stop_accept_expected=[()],
                            changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1409,14 +1367,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
@@ -1430,7 +1387,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1458,14 +1414,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
@@ -1479,7 +1434,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1508,14 +1462,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1523,7 +1476,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
@@ -1535,7 +1487,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1564,14 +1515,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1579,7 +1529,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_changer_error(
@@ -1592,7 +1541,6 @@ class TestKioskFsm(unittest.TestCase):
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1621,14 +1569,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1636,7 +1583,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_changer_error(
@@ -1649,7 +1595,6 @@ class TestKioskFsm(unittest.TestCase):
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                              'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1678,14 +1623,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1693,7 +1637,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
@@ -1705,7 +1648,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1734,14 +1676,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1749,12 +1690,10 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
         self.check_outputs(fsm_ready_expected=[()])
-        self.reset_outputs()
         
         self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
                                 error_text='error')
@@ -1764,7 +1703,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1793,14 +1731,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1808,12 +1745,10 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
         self.check_outputs(fsm_ready_expected=[()])
-        self.reset_outputs()
         
         self.fire_changer_error(
                             error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
@@ -1824,7 +1759,6 @@ class TestKioskFsm(unittest.TestCase):
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                          'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1853,14 +1787,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1868,12 +1801,10 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
         self.check_outputs(fsm_ready_expected=[()])
-        self.reset_outputs()
         
         self.fire_changer_error(
                             error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
@@ -1884,7 +1815,6 @@ class TestKioskFsm(unittest.TestCase):
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                              'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1913,14 +1843,13 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_start_accept_expected=[()],
                            changer_stop_accept_expected=[(), ()],
                            validator_stack_bill_expected=[()])
-        self.reset_outputs()
         
         #4
         self.product_prepared()
@@ -1928,12 +1857,10 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
         self.check_outputs(fsm_ready_expected=[()])
-        self.reset_outputs()
         
         self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
                                 error_text='error')
@@ -1943,7 +1870,6 @@ class TestKioskFsm(unittest.TestCase):
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
                            changer_stop_accept_expected=[()],)
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -1969,7 +1895,6 @@ class TestKioskFsm(unittest.TestCase):
                                                  'error_text':'error'},)],
                            validator_return_bill_expected=[()],
                            validator_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.check_kiosk_is_not_serviced()
@@ -2006,9 +1931,8 @@ class TestKioskFsm(unittest.TestCase):
         # check coin is accepted
         self.check_outputs(changer_stop_accept_expected=[()],
                            changer_start_accept_expected=[()])
-        self.reset_outputs()
         
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product])
         yield self.sleep_defer(sleep_sec=0.1)
         # check bill not accepted
         self.check_outputs()
@@ -2017,7 +1941,6 @@ class TestKioskFsm(unittest.TestCase):
         
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         self.product_prepared()
@@ -2028,7 +1951,6 @@ class TestKioskFsm(unittest.TestCase):
                            fsm_error_expected=[({'error_code':1, 
                                                  'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
 
         self.fire_coin_out(1)
         self.check_outputs()
@@ -2063,7 +1985,6 @@ class TestKioskFsm(unittest.TestCase):
         self.accept_coin_amount(PRODUCTS[product]-3)
         self.check_outputs(changer_stop_accept_expected=[()],
                            changer_start_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         self.fire_validator_error(error_code=1, error_text='error')
@@ -2075,9 +1996,8 @@ class TestKioskFsm(unittest.TestCase):
         # check coin is accepted
         self.check_outputs(changer_stop_accept_expected=[()],
                            changer_start_accept_expected=[()])
-        self.reset_outputs()
         
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product])
         yield self.sleep_defer(sleep_sec=0.1)
         # check bill not accepted
         self.check_outputs()
@@ -2086,7 +2006,6 @@ class TestKioskFsm(unittest.TestCase):
         
         self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #6
         self.product_prepared()
@@ -2097,7 +2016,6 @@ class TestKioskFsm(unittest.TestCase):
                            fsm_error_expected=[({'error_code':1, 
                                                  'error_text':'error'},)],
                            changer_stop_accept_expected=[()])
-        self.reset_outputs()
 
         self.fire_coin_out(1)
         self.check_outputs()
@@ -2129,7 +2047,7 @@ class TestKioskFsm(unittest.TestCase):
 
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
         
@@ -2146,7 +2064,6 @@ class TestKioskFsm(unittest.TestCase):
                            changer_dispense_amount_expected=[((1,),)],
                            fsm_error_expected=[({'error_code':1, 
                                                  'error_text':'error'},)])
-        self.reset_outputs()
 
         self.fire_coin_out(1)
         self.check_outputs()
@@ -2178,7 +2095,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.reset_outputs()
@@ -2189,7 +2106,6 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_validator_error(error_code=1, error_text='error')
@@ -2200,7 +2116,6 @@ class TestKioskFsm(unittest.TestCase):
                                                  'error_text':'error'},)],
                            validator_return_bill_expected=[()],
                            validator_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -2229,7 +2144,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(4)
+        self.check_bill_amount(4)
         yield self.sleep_defer(sleep_sec=0.1)
 
         self.reset_outputs()
@@ -2240,12 +2155,10 @@ class TestKioskFsm(unittest.TestCase):
         #5
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(1)
         self.check_outputs(fsm_ready_expected=[()])
-        self.reset_outputs()
         
         self.fire_validator_error(error_code=1, error_text='error')
         yield self.sleep_defer(sleep_sec=0.1)
@@ -2255,7 +2168,6 @@ class TestKioskFsm(unittest.TestCase):
                                                  'error_text':'error'},)],
                            validator_return_bill_expected=[()],
                            validator_stop_accept_expected=[()])
-        self.reset_outputs()
         
         #8
         yield self.check_kiosk_is_not_serviced()
@@ -2281,7 +2193,7 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.accept_coin_amount(PRODUCTS[product]-3)
-        self.accept_bill_amount(3)
+        self.check_bill_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
         
@@ -2292,7 +2204,6 @@ class TestKioskFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(
                    changer_dispense_amount_expected=[((PRODUCTS[product],),)])
-        self.reset_outputs()
 
         #6
         self.fire_coin_out(PRODUCTS[product])
@@ -2324,11 +2235,10 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
         
         #check bill not accepted
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product], accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.sleep_defer(sleep_sec=0.2)
@@ -2363,11 +2273,10 @@ class TestKioskFsm(unittest.TestCase):
         self.set_changer_offline()
         
         #check bill not accepted
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product], accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
         
         #4
         yield self.sleep_defer(sleep_sec=0.2)
@@ -2400,7 +2309,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         self.accept_coin_amount(1)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
@@ -2409,11 +2318,10 @@ class TestKioskFsm(unittest.TestCase):
         self.set_changer_offline()
         
         #check bill not accepted
-        self.accept_bill_amount(PRODUCTS[product])
+        self.check_bill_amount(PRODUCTS[product], accept_bill=False)
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(validator_return_bill_expected=[()],
                            validator_start_accept_expected=[()])
-        self.reset_outputs()
         
         #5
         yield self.sleep_defer(sleep_sec=0.4)
@@ -2443,7 +2351,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.accept_coin_amount(2)
         yield self.sleep_defer(sleep_sec=0.1)
@@ -2452,7 +2360,6 @@ class TestKioskFsm(unittest.TestCase):
                            validator_stack_bill_expected=[()],
                            validator_start_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #4
         self.set_changer_offline()
@@ -2487,7 +2394,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
@@ -2496,7 +2403,6 @@ class TestKioskFsm(unittest.TestCase):
                            validator_stack_bill_expected=[()],
                            validator_start_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #4
         self.set_changer_offline()
@@ -2512,7 +2418,6 @@ class TestKioskFsm(unittest.TestCase):
         #7
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         self.fire_coin_out(1)
 
@@ -2540,7 +2445,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         yield self.sleep_defer(sleep_sec=0.1)
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
@@ -2549,7 +2454,6 @@ class TestKioskFsm(unittest.TestCase):
                            validator_stack_bill_expected=[()],
                            validator_start_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #4
         self.set_changer_offline()
@@ -2593,7 +2497,6 @@ class TestKioskFsm(unittest.TestCase):
         self.check_outputs(changer_stop_accept_expected=[(), ()],
                            changer_start_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #5
         self.product_prepared()
@@ -2601,7 +2504,6 @@ class TestKioskFsm(unittest.TestCase):
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         self.fire_coin_out(1)
 
@@ -2640,7 +2542,6 @@ class TestKioskFsm(unittest.TestCase):
         self.check_outputs(changer_stop_accept_expected=[(), ()],
                            changer_start_accept_expected=[()],
                            plc_prepare_expected=[((PRODUCT_1,),)])
-        self.reset_outputs()
         
         #5
         self.product_prepared()
@@ -2648,7 +2549,6 @@ class TestKioskFsm(unittest.TestCase):
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         self.fire_coin_out(1)
 
@@ -2677,7 +2577,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
@@ -2691,7 +2591,6 @@ class TestKioskFsm(unittest.TestCase):
         #6        
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
         
         self.fire_coin_out(1)
 
@@ -2720,7 +2619,7 @@ class TestKioskFsm(unittest.TestCase):
         self.reset_outputs()
 
         #3
-        self.accept_bill_amount(PRODUCTS[product]-2)
+        self.check_bill_amount(PRODUCTS[product]-2)
         self.accept_coin_amount(3)
         yield self.sleep_defer(sleep_sec=0.1)
         self.reset_outputs()
@@ -2730,7 +2629,6 @@ class TestKioskFsm(unittest.TestCase):
         
         yield self.sleep_defer(sleep_sec=0.1)
         self.check_outputs(changer_dispense_amount_expected=[((1,),)])
-        self.reset_outputs()
 
         #5
         self.set_validator_offline()
@@ -2775,11 +2673,13 @@ class TestKioskFsm(unittest.TestCase):
             signal='error', error_code=error_code, error_text=error_text)
 
 
-    def accept_bill_amount(self, amount):
+    def check_bill_amount(self, amount, accept_bill=True):
         dispatcher.send_minimal(
             sender=self.validator, signal='check_bill', amount=amount)
-        
-        
+        if accept_bill:
+            dispatcher.send_minimal(
+                sender=self.validator, signal='bill_in', amount=amount)
+
     def product_prepared(self):
         dispatcher.send_minimal(
             sender=self.plc, signal='prepared')
@@ -2813,7 +2713,7 @@ class TestKioskFsm(unittest.TestCase):
         self.kiosk_fsm.sell(product=PRODUCT_1)
         self.check_outputs()
         
-        self.accept_bill_amount(1)
+        self.check_bill_amount(1)
         
         def callback_func(dont_care):
             self.check_outputs(validator_return_bill_expected=[()])
@@ -2874,6 +2774,8 @@ class TestKioskFsm(unittest.TestCase):
                           self.validator.return_bill.call_args_list)
         self.assertEquals(plc_prepare_expected, 
                           self.plc.prepare.call_args_list)
+        
+        self.reset_outputs()
 
 
     def sleep_defer(self, sleep_sec):

@@ -873,14 +873,12 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense(10)
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='error', 
             error_code='12', error_text='error_12')
-        self.changer_fsm.stop_accept.reset_mock()
-        self.validator_fsm.stop_accept.reset_mock()
-        self.fsm_listener.error.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_change()
          
@@ -891,14 +889,12 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense(10)
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='error', 
             error_code='12', error_text='error_12')
-        self.changer_fsm.stop_accept.reset_mock()
-        self.validator_fsm.stop_accept.reset_mock()
-        self.fsm_listener.error.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_all()
          
@@ -1591,7 +1587,6 @@ class TestCashFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=1)
         
         self.check_outputs(changer_fsm_start_accept_expected=[()])
-        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -1634,7 +1629,6 @@ class TestCashFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=3)
         
         self.check_outputs(changer_fsm_start_accept_expected=[()])
-        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -1845,7 +1839,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
         
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_change()
          
@@ -1858,7 +1852,7 @@ class TestCashFsm(unittest.TestCase):
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
 
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_all()
          
@@ -2103,7 +2097,6 @@ class TestCashFsm(unittest.TestCase):
         yield self.sleep_defer(sleep_sec=3)
         
         self.check_outputs(changer_fsm_start_accept_expected=[()])
-        self.reset_outputs()
             
         yield self.sleep_defer(sleep_sec=2)
 
@@ -2117,17 +2110,15 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense(10)
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='error', 
             error_code='12', error_text='error_12')
-        self.changer_fsm.stop_accept.reset_mock()
-        self.validator_fsm.stop_accept.reset_mock()
-        self.fsm_listener.error.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_change()
-        self.changer_fsm.start_dispense.reset_mock()
+        self.reset_outputs()
         self.cash_fsm.dispense_change()
          
         self.check_outputs(changer_fsm_start_dispense_expected=[((0,),)])
@@ -2137,17 +2128,15 @@ class TestCashFsm(unittest.TestCase):
         self.set_fsm_state_wait_dispense(10)
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='coin_in', amount=1)
-        self.fsm_listener.accepted.reset_mock()
+        self.reset_outputs()
         
         dispatcher.send_minimal(
             sender=self.changer_fsm, signal='error', 
             error_code='12', error_text='error_12')
-        self.changer_fsm.stop_accept.reset_mock()
-        self.validator_fsm.stop_accept.reset_mock()
-        self.fsm_listener.error.reset_mock()
+        self.reset_outputs()
         
         self.cash_fsm.dispense_all()
-        self.changer_fsm.start_dispense.reset_mock()
+        self.reset_outputs()
         self.cash_fsm.dispense_all()
          
         self.check_outputs(changer_fsm_start_dispense_expected=[((0,),)])
@@ -2391,6 +2380,7 @@ class TestCashFsm(unittest.TestCase):
                           self.validator_fsm.ban_bill.call_args_list)
         self.assertEquals(validator_fsm_permit_bill_expected, 
                           self.validator_fsm.permit_bill.call_args_list)
+        self.reset_outputs()
 
 
     def reset_outputs(self):

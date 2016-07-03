@@ -50,6 +50,19 @@ class KioskFSM(Machine):
         dispatcher.connect(self.prepared, sender=plc, signal='prepared')
         dispatcher.connect(self.not_prepared, sender=plc, signal='not_prepared')
 
+        dispatcher.connect(self._dispense_amount_changed, 
+                           sender=cash_fsm, signal='dispense_amount_changed')
+        dispatcher.connect(self._deposit_amount_changed, 
+                           sender=cash_fsm, signal='deposit_amount_changed')
+        dispatcher.connect(self._total_amount_changed, 
+                           sender=cash_fsm, signal='total_amount_changed')
+        dispatcher.connect(self._coin_amount_changed, 
+                           sender=cash_fsm, signal='coin_amount_changed')
+        dispatcher.connect(self._bill_amount_changed, 
+                           sender=cash_fsm, signal='bill_amount_changed')
+        dispatcher.connect(self._bill_count_changed, 
+                           sender=cash_fsm, signal='bill_count_changed')
+
         # init parameters
         self._product = -1
 
@@ -91,3 +104,58 @@ class KioskFSM(Machine):
         dispatcher.send_minimal(
             sender=self, signal='error', 
             error_code=error_code, error_text=error_text)
+
+    #######################
+    ## Public Methods
+    #######################
+    def get_dispense_amount(self):
+        return self.cash_fsm.get_dispense_amount()
+    
+    def get_deposit_amount(self):
+        return self.cash_fsm.get_deposit_amount()
+
+    def get_coin_amount(self):
+        return self.cash_fsm.get_coin_amount()
+
+    def get_bill_amount(self):
+        return self.cash_fsm.get_bill_amount()
+
+    def get_total_amount(self):
+        return self.cash_fsm.get_total_amount()
+
+    def set_bill_amount(self, amount=0):
+        return self.cash_fsm.set_bill_amount(amount=amount)
+
+    #######################
+    ## Events
+    #######################
+    
+    def _dispense_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='dispense_amount_changed', 
+            amount=amount)
+
+    def _deposit_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='deposit_amount_changed', 
+            amount=amount)
+
+    def _total_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='total_amount_changed', 
+            amount=amount)
+
+    def _coin_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='coin_amount_changed', 
+            amount=amount)
+
+    def _bill_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='bill_amount_changed', 
+            amount=amount)
+
+    def _bill_count_changed(self, count):
+        dispatcher.send_minimal(
+            sender=self, signal='bill_count_changed', 
+            count=count)

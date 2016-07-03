@@ -55,13 +55,21 @@ class ChangerFSM(Machine):
                            sender=changer, signal='initialized')
         dispatcher.connect(self.error, sender=changer, signal='error')
         dispatcher.connect(self.offline, sender=changer, signal='offline')
-        dispatcher.connect(self.coin_in, sender=changer, signal='coin_in')
-        dispatcher.connect(self.coin_out, sender=changer, signal='coin_out')
+        dispatcher.connect(self._on_coin_in, sender=changer, signal='coin_in')
+        dispatcher.connect(self._on_coin_out, sender=changer, signal='coin_out')
 
         # init parameters
         self._dispensed_amount = 0
         self._need_dispense_amount = 0
 
+    def _on_coin_in(self, amount):
+        self.coin_in(amount=amount)
+        self._total_amount_changed(amount=self.get_total_amount())
+
+    def _on_coin_out(self, amount):
+        self.coin_out(amount=amount)
+        self._total_amount_changed(amount=self.get_total_amount())
+        
     def start(self):
         self.changer.start_device()
 
@@ -123,3 +131,19 @@ class ChangerFSM(Machine):
 
     def can_dispense_amount(self, amount):
         return self.changer.can_dispense_amount(amount)
+
+    #######################
+    ## Public Methods
+    #######################
+
+    def get_total_amount(self):
+        return self.changer.get_total_amount()
+
+    #######################
+    ## Events
+    #######################
+    
+    def _total_amount_changed(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='total_amount_changed', 
+            amount=amount)

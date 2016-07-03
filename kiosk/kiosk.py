@@ -249,12 +249,6 @@ class RUBillValidator(BillValidator):
     def __init__(self, proto):
         super(RUBillValidator, self).__init__(proto, BILLS)
 
-    def start_accept(self):
-        return self.bill_type(bills='\xFF\xFF\xFF\xFF')
-
-    def stop_accept(self):
-        return self.bill_type(bills='\x00\x00\x00\x00')
-
 
 class Plc(object):
 

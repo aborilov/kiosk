@@ -672,7 +672,7 @@ class TestChangerFsm(unittest.TestCase):
 
         self.changer_fsm.start_dispense(amount=10)
         
-        yield self.check_outputs_defer()
+        yield self.check_outputs_defer(changer_dispense_amount_expected=[((10,),)])
 
 
     @defer.inlineCallbacks

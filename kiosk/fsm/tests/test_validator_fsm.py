@@ -3,7 +3,8 @@ from louie import dispatcher
 
 from twisted.internet import reactor, defer, task
 
-from unittest import TestCase
+# from unittest import TestCase
+from twisted.trial import unittest
 
 from kiosk.fsm.validator_fsm import BillValidatorFSM
 
@@ -13,7 +14,7 @@ except ImportError:
     from mock import MagicMock
     
 
-class TestValidatorFsm(TestCase):
+class TestValidatorFsm(unittest.TestCase):
     
     def setUp(self):
         self.fsm_listener = MagicMock()
@@ -693,8 +694,13 @@ class TestValidatorFsm(TestCase):
         
         yield self.sleep_defer(sleep_sec=0.5)
 
-        self.check_outputs(fsm_bill_in_expected=[({'amount':10,},)],
-                           validator_stack_bill_expected=[()])
+        self.check_outputs(validator_stack_bill_expected=[()])
+        self.validator.stack_bill.reset_mock()
+
+        dispatcher.send_minimal(
+            sender=self.validator, signal='bill_in', amount=10)
+
+        self.check_outputs(fsm_bill_in_expected=[({'amount':10,},)])
 
 
     def set_fsm_state_online(self):
