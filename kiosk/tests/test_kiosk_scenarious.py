@@ -900,8 +900,9 @@ class TestKioskFsm(unittest.TestCase):
         2) Select product
         3) Start payment
         4) Get Error Coin Jam from changer
-        5) Go to error state
-        6) Check kiosk is not serviced
+        5) Return accepted amount
+        6) Go to error state
+        7) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -922,11 +923,14 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_changer_error(error_code=changer.ERROR_CODE_COIN_JAM, 
                                 error_text='error')
         
+        yield self.sleep_defer(sleep_sec=0.1)
+        
         #5, 6
         self.check_outputs(fsm_error_expected=[
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -939,8 +943,9 @@ class TestKioskFsm(unittest.TestCase):
         2) Select product
         3) Start payment
         4) Get Error Tube Jam from changer
-        5) Go to error state
-        6) Check kiosk is not serviced
+        5) Return accepted amount
+        6) Go to error state
+        7) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -961,11 +966,14 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_changer_error(error_code=changer.ERROR_CODE_TUBE_JAM, 
                                 error_text='error')
         
+        yield self.sleep_defer(sleep_sec=0.1)
+        
         #5, 6
         self.check_outputs(fsm_error_expected=[
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((PRODUCTS[product]-1,),)])
         
         #7
         yield self.check_kiosk_is_not_serviced()
@@ -1001,6 +1009,8 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_changer_error(
                             error_code=changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
                             error_text='error')
+        
+        yield self.sleep_defer(sleep_sec=0.1)
         
         #5, 6
         self.check_outputs(fsm_error_expected=[
@@ -1043,6 +1053,8 @@ class TestKioskFsm(unittest.TestCase):
         self.fire_changer_error(
                             error_code=changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
                             error_text='error')
+        
+        yield self.sleep_defer(sleep_sec=0.1)
         
         #5, 6
         self.check_outputs(fsm_error_expected=[
@@ -1284,6 +1296,8 @@ class TestKioskFsm(unittest.TestCase):
         #5
         self.product_prepared()
         
+        yield self.sleep_defer(sleep_sec=0.1)
+        
         #6, 7
         self.check_outputs(fsm_error_expected=[
                        ({'error_code':changer.ERROR_CODE_DEFECTIVE_TUBE_SENSOR, 
@@ -1334,6 +1348,8 @@ class TestKioskFsm(unittest.TestCase):
         #5
         self.product_prepared()
         
+        yield self.sleep_defer(sleep_sec=0.1)
+        
         #6, 7
         self.check_outputs(fsm_error_expected=[
                            ({'error_code':changer.ERROR_CODE_ROM_CHECKSUM_ERROR, 
@@ -1353,8 +1369,9 @@ class TestKioskFsm(unittest.TestCase):
         3) Payment on more amount
         4) Get Error Coin Jam from changer
         5) Prepare product 
-        6) Go to error state
-        7) Check kiosk is not serviced
+        6) Return change
+        7) Go to error state
+        8) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -1382,13 +1399,16 @@ class TestKioskFsm(unittest.TestCase):
         #5
         self.product_prepared()
         
-        #6
+        yield self.sleep_defer(sleep_sec=0.1)
+        
+        #6, 7
         self.check_outputs(fsm_error_expected=[
                                    ({'error_code':changer.ERROR_CODE_COIN_JAM, 
                                      'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((1,),)])
         
-        #7
+        #8
         yield self.check_kiosk_is_not_serviced()
 
 
@@ -1400,8 +1420,9 @@ class TestKioskFsm(unittest.TestCase):
         3) Payment on more amount
         4) Get Error Tube Jam from changer
         5) Prepare product 
-        6) Go to error state
-        7) Check kiosk is not serviced
+        6) Return change
+        7) Go to error state
+        8) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -1429,13 +1450,16 @@ class TestKioskFsm(unittest.TestCase):
         #5
         self.product_prepared()
         
-        #6
+        yield self.sleep_defer(sleep_sec=0.1)
+        
+        #6, 7
         self.check_outputs(fsm_error_expected=[
                                    ({'error_code':changer.ERROR_CODE_TUBE_JAM, 
                                      'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
+                           changer_stop_accept_expected=[()],
+                           changer_dispense_amount_expected=[((1,),)])
         
-        #7
+        #8
         yield self.check_kiosk_is_not_serviced()
 
 
@@ -1906,11 +1930,8 @@ class TestKioskFsm(unittest.TestCase):
         1) Wait select product
         2) Select product
         3) Get Error from validator
-        4) Accept payment from changer
-        5) Prepare product
-        6) Return change
-        7) Go to error state
-        8) Check kiosk is not serviced
+        4) Go to error state
+        5) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -1923,39 +1944,17 @@ class TestKioskFsm(unittest.TestCase):
         
         #3
         self.fire_validator_error(error_code=1, error_text='error')
-        self.check_outputs(validator_return_bill_expected=[()],
-                           validator_stop_accept_expected=[()])
-
+        
+        yield self.sleep_defer(sleep_sec=0.1)
+        
         #4
-        self.accept_coin_amount(PRODUCTS[product]-3)
-        # check coin is accepted
-        self.check_outputs(changer_stop_accept_expected=[()],
-                           changer_start_accept_expected=[()])
-        
-        self.check_bill_amount(PRODUCTS[product])
-        yield self.sleep_defer(sleep_sec=0.1)
-        # check bill not accepted
-        self.check_outputs()
-        
-        self.accept_coin_amount(4)
-        
-        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected=[()])
-        
-        #5
-        self.product_prepared()
-        
-        #6, 7
-        yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected=[((1,),)],
+        self.check_outputs(validator_return_bill_expected=[()],
+                           validator_stop_accept_expected=[()],
+                           changer_stop_accept_expected=[()],
                            fsm_error_expected=[({'error_code':1, 
-                                                 'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
+                                                 'error_text':'error'},)])
 
-        self.fire_coin_out(1)
-        self.check_outputs()
-        
-        #8
+        #5
         yield self.check_kiosk_is_not_serviced()
 
 
@@ -1966,11 +1965,9 @@ class TestKioskFsm(unittest.TestCase):
         2) Select product
         3) Start payment
         4) Get Error from validator
-        5) Accept payment from changer
-        6) Prepare product
-        7) Return change
-        8) Go to error state
-        9) Check kiosk is not serviced
+        5) Return accepted amount
+        6) Go to error state
+        7) Check kiosk is not serviced
         '''
         #1        
         self.set_kiosk_ready_state()
@@ -1988,39 +1985,18 @@ class TestKioskFsm(unittest.TestCase):
         
         #4
         self.fire_validator_error(error_code=1, error_text='error')
+        
+        yield self.sleep_defer(sleep_sec=0.1)
+        
+        #5, 6
         self.check_outputs(validator_return_bill_expected=[()],
-                           validator_stop_accept_expected=[()])
-
-        #5
-        self.accept_coin_amount(1)
-        # check coin is accepted
-        self.check_outputs(changer_stop_accept_expected=[()],
-                           changer_start_accept_expected=[()])
+                   validator_stop_accept_expected=[()],
+                   changer_stop_accept_expected=[()],
+                   changer_dispense_amount_expected=[((PRODUCTS[product]-3,),)],
+                   fsm_error_expected=[({'error_code':1, 
+                                         'error_text':'error'},)])
         
-        self.check_bill_amount(PRODUCTS[product])
-        yield self.sleep_defer(sleep_sec=0.1)
-        # check bill not accepted
-        self.check_outputs()
-        
-        self.accept_coin_amount(3)
-        
-        self.check_outputs(plc_prepare_expected=[((PRODUCT_1,),)],
-                           changer_stop_accept_expected=[()])
-        
-        #6
-        self.product_prepared()
-        
-        #7, 8
-        yield self.sleep_defer(sleep_sec=0.1)
-        self.check_outputs(changer_dispense_amount_expected=[((1,),)],
-                           fsm_error_expected=[({'error_code':1, 
-                                                 'error_text':'error'},)],
-                           changer_stop_accept_expected=[()])
-
-        self.fire_coin_out(1)
-        self.check_outputs()
-        
-        #9
+        #7
         yield self.check_kiosk_is_not_serviced()
 
 

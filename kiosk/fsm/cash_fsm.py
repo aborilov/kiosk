@@ -84,7 +84,7 @@ class CashFSM(Machine):
                            sender=changer_fsm, signal='initialized')
         dispatcher.connect(self._on_changer_error, 
                            sender=changer_fsm, signal='error')
-        dispatcher.connect(self.coin_in, sender=changer_fsm, signal='coin_in')
+        dispatcher.connect(self._on_coin_in, sender=changer_fsm, signal='coin_in')
         dispatcher.connect(self.amount_dispensed, 
                            sender=changer_fsm, signal='amount_dispensed')
         dispatcher.connect(self._on_validator_offline, 
@@ -93,7 +93,7 @@ class CashFSM(Machine):
                            sender=validator_fsm, signal='initialized')
         dispatcher.connect(self._on_validator_error, 
                            sender=validator_fsm, signal='error')
-        dispatcher.connect(self.bill_in, 
+        dispatcher.connect(self._on_bill_in, 
                            sender=validator_fsm, signal='bill_in')
         dispatcher.connect(self.check_bill, 
                            sender=validator_fsm, signal='check_bill')
@@ -143,6 +143,14 @@ class CashFSM(Machine):
     def _on_validator_error(self, error_code, error_text):
         self.validator_state = DEVICE_STATE_ERROR
         self.validator_error(error_code, error_text)
+
+    def _on_coin_in(self, amount):
+        self.coin_in(amount)
+        self._fire_coin_in(amount)
+
+    def _on_bill_in(self, amount):
+        self.bill_in(amount)
+        self._fire_bill_in(amount)
 
     def _is_ready(self):
         return ((self.changer_state == DEVICE_STATE_READY) and
@@ -299,6 +307,16 @@ class CashFSM(Machine):
     #######################
     ## Events
     #######################
+
+    def _fire_coin_in(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='coin_in', 
+            amount=amount)
+
+    def _fire_bill_in(self, amount):
+        dispatcher.send_minimal(
+            sender=self, signal='bill_in', 
+            amount=amount)
     
     def _dispense_amount_changed(self, amount):
         dispatcher.send_minimal(

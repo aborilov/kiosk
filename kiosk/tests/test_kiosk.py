@@ -37,6 +37,10 @@ class TestKioskMethods(unittest.TestCase):
                 MagicMock(spec="deposit_amount_changed")
         self.fsm_listener.dispense_amount_changed = \
                 MagicMock(spec="dispense_amount_changed")
+        self.fsm_listener.coin_in = \
+                MagicMock(spec="coin_in")
+        self.fsm_listener.bill_in = \
+                MagicMock(spec="bill_in")
         
         self.plc = MagicMock()
         self.changer = MagicMock()
@@ -69,6 +73,12 @@ class TestKioskMethods(unittest.TestCase):
         dispatcher.connect(self.fsm_listener.dispense_amount_changed, 
                            sender=self.kiosk_fsm, 
                            signal='dispense_amount_changed')
+        dispatcher.connect(self.fsm_listener.coin_in, 
+                           sender=self.kiosk_fsm, 
+                           signal='coin_in')
+        dispatcher.connect(self.fsm_listener.bill_in, 
+                           sender=self.kiosk_fsm, 
+                           signal='bill_in')
 
         self.kiosk_fsm.start()
         
@@ -432,7 +442,33 @@ class TestKioskMethods(unittest.TestCase):
         self.fire_bill_in()
         self.assertEquals([({'amount':5,},)], 
                 self.fsm_listener.bill_amount_changed.call_args_list)
-    
+
+    def test_coin_in(self):
+        self.set_kiosk_ready_state()
+        
+        dispatcher.send_minimal(
+            sender=self.changer, signal='coin_in', amount=1)
+        dispatcher.send_minimal(
+            sender=self.changer, signal='coin_in', amount=5)
+
+        self.assertEquals([({'amount':1,},), ({'amount':5,},)], 
+                self.fsm_listener.coin_in.call_args_list)
+        self.assertEquals([], 
+                self.fsm_listener.bill_in.call_args_list)
+
+    def test_bill_in(self):
+        self.set_kiosk_ready_state()
+        
+        dispatcher.send_minimal(
+            sender=self.validator, signal='bill_in', amount=1)
+        dispatcher.send_minimal(
+            sender=self.validator, signal='bill_in', amount=5)
+
+        self.assertEquals([({'amount':1,},), ({'amount':5,},)], 
+                self.fsm_listener.bill_in.call_args_list)
+        self.assertEquals([], 
+                self.fsm_listener.coin_in.call_args_list)
+        
     def set_kiosk_ready_state(self):
         dispatcher.send_minimal(
             sender=self.changer, signal='online')
@@ -471,29 +507,3 @@ class TestKioskMethods(unittest.TestCase):
     def sleep_defer(self, sleep_sec):
         return task.deferLater(reactor, sleep_sec, defer.passthru, None)
 
-    def check_outputs(self,
-                      fsm_total_amount_changed_expected=[],
-                      fsm_coin_amount_changed_expected=[],
-                      fsm_bill_amount_changed_expected=[],
-                      fsm_deposit_amount_changed_expected=[],
-                      fsm_dispense_amount_changed_expected=[]):
-        
-        self.assertEquals(fsm_total_amount_changed_expected, 
-                          self.fsm_listener.total_amount_changed.call_args_list)
-        self.assertEquals(fsm_coin_amount_changed_expected, 
-                          self.fsm_listener.coin_amount_changed.call_args_list)
-        self.assertEquals(fsm_bill_amount_changed_expected, 
-                          self.fsm_listener.bill_amount_changed.call_args_list)
-        self.assertEquals(fsm_deposit_amount_changed_expected, 
-                          self.fsm_listener.deposit_amount_changed.call_args_list)
-        self.assertEquals(fsm_dispense_amount_changed_expected, 
-                          self.fsm_listener.dispense_amount_changed.call_args_list)
-        
-        self.reset_outputs()
-
-    def reset_outputs(self):
-        self.fsm_listener.total_amount_changed.reset_mock()
-        self.fsm_listener.coin_amount_changed.reset_mock()
-        self.fsm_listener.bill_amount_changed.reset_mock()
-        self.fsm_listener.deposit_amount_changed.reset_mock()
-        self.fsm_listener.dispense_amount_changed.reset_mock()
